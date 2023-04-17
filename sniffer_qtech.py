@@ -1,10 +1,66 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
 import time
+import psycopg2
+
+def database_open(name_prod, stack_info, base_inf):
+    conn = psycopg2.connect(dbname='postgres', user='postgres', 
+                        password='14789635', host='localhost')
+    cursor = conn.cursor()
+    
+    database_input(name_prod, cursor, stack_info, base_inf)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def database_input(name_prod, cursor, stack, base_inf):
+    match name_prod:
+        case('Wi-Fi роутеры'):
+            cursor.execute("""INSERT INTO charact_router (charact1, charact2, charact3, charact5) values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT id_charact FROM charact_router ORDER BY id_charact DESC LIMIT 1""")
+            id = cursor.fetchall()
+            base_inf+=id
+            cursor.execute("""INSERT INTO router (name, link, id_charact) values (%s, %s, %s)""", base_inf)
+        case('Маршрутизаторы'):
+            cursor.execute("""INSERT INTO charact_marsh (charact1, charact2) values (%s, %s)""", stack)
+            cursor.execute("""SELECT id_charact FROM charact_marsh ORDER BY id_charact DESC LIMIT 1""")
+            id = cursor.fetchall()
+            base_inf+=id
+            cursor.execute("""INSERT INTO marsh (name, link, id_charact) values (%s, %s, %s)""", base_inf)
+        case('Внутренние точки доступа'):
+            cursor.execute("""INSERT INTO charact_toch (charact2, charact3, charact4, charact5) values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT id_charact FROM charact_toch ORDER BY id_charact DESC LIMIT 1""")
+            id = cursor.fetchall()
+            base_inf+=id
+            cursor.execute("""INSERT INTO toch (name, link, id_charact) values (%s, %s, %s)""", base_inf)
+        case('Внешние точки доступа'):
+            cursor.execute("""INSERT INTO charact_toch (charact2, charact3, charact4, charact5) values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT id_charact FROM charact_toch ORDER BY id_charact DESC LIMIT 1""")
+            id = cursor.fetchall()
+            base_inf+=id
+            cursor.execute("""INSERT INTO toch (name, link, id_charact) values (%s, %s, %s)""", base_inf)
+        case('Управляемые коммутаторы'):
+            cursor.execute("""INSERT INTO charact_com (charact2, charact3, charact4, charact5, charact6, charact7, charact8) values (%s, %s, %s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT id_charact FROM charact_com ORDER BY id_charact DESC LIMIT 1""")
+            id = cursor.fetchall()
+            base_inf+=id
+            cursor.execute("""INSERT INTO com (name, link, id_charact) values (%s, %s, %s)""", base_inf)
+        case('Неуправляемые коммутаторы'):
+            cursor.execute("""INSERT INTO charact_com (charact2, charact3, charact4, charact5, charact6, charact7) values (%s, %s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT id_charact FROM charact_com ORDER BY id_charact DESC LIMIT 1""")
+            id = cursor.fetchall()
+            base_inf+=id
+            cursor.execute("""INSERT INTO com (name, link, id_charact) values (%s, %s, %s)""", base_inf)
+        case('Серверные платформы'):
+            cursor.execute("""INSERT INTO charact_server (charact1, charact2, charact3, charact4, charact5, charact6) values (%s, %s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT id_charact FROM charact_server ORDER BY id_charact DESC LIMIT 1""")
+            id = cursor.fetchall()
+            base_inf+=id
+            cursor.execute("""INSERT INTO server (name, link, id_charact) values (%s, %s, %s)""", base_inf)
 
 def sniff_info_qtech(name_prode):
     time.sleep(3)
@@ -16,8 +72,8 @@ def sniff_info_qtech(name_prode):
                 name=section.find_elements(By.CSS_SELECTOR, 'h3.product__title')
                 name_series=section.find_elements(By.TAG_NAME, 'a')[0]
                 link = name_series.get_attribute('href')
-                print(f'Name: {name[0].text}')
-                print(f'Link: {link}')
+                name=name[0].text
+                base_inf=[name, link]
                 driver.execute_script("window.open('{}', '_blank')".format(link))
 
                             # Switch to the new tab
@@ -29,7 +85,7 @@ def sniff_info_qtech(name_prode):
                 con_characts=driver.find_elements(By.CSS_SELECTOR, 'div.table-block')
 
                                 
-                sniff_charact_qtech(name_prode, con_characts)
+                sniff_charact_qtech(name_prode, con_characts, base_inf)
 
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
@@ -42,8 +98,8 @@ def sniff_info_qtech(name_prode):
                 name=section.find_elements(By.CSS_SELECTOR, 'div.product__title')
                 name_series=section.find_elements(By.TAG_NAME, 'a')[0]
                 link = name_series.get_attribute('href')
-                print(f'Name: {name[0].text}')
-                print(f'Link: {link}')
+                name=name[0].text
+                base_inf=[name, link]
                 driver.execute_script("window.open('{}', '_blank')".format(link))
 
                             # Switch to the new tab
@@ -55,7 +111,7 @@ def sniff_info_qtech(name_prode):
                 con_characts=driver.find_elements(By.CSS_SELECTOR, 'div.table-block')
 
                                 
-                sniff_charact_qtech(name_prode, con_characts)
+                sniff_charact_qtech(name_prode, con_characts, base_inf)
 
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
@@ -68,8 +124,8 @@ def sniff_info_qtech(name_prode):
                 name=section.find_elements(By.CSS_SELECTOR, 'div.product__title')
                 name_series=section.find_elements(By.TAG_NAME, 'a')[0]
                 link = name_series.get_attribute('href')
-                print(f'Name: {name[0].text}')
-                print(f'Link: {link}')
+                name=name[0].text
+                base_inf=[name, link]
                 driver.execute_script("window.open('{}', '_blank')".format(link))
 
                             # Switch to the new tab
@@ -81,16 +137,16 @@ def sniff_info_qtech(name_prode):
                 con_characts=driver.find_elements(By.CSS_SELECTOR, 'div.table-block')
 
                                 
-                sniff_charact_qtech(name_prode, con_characts)
+                sniff_charact_qtech(name_prode, con_characts, base_inf)
 
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
 
 
     
-def sniff_charact_qtech(name_prode, con_characts):
+def sniff_charact_qtech(name_prode, con_characts, base_inf):
     if (name_prode=='Управляемые коммутаторы'):
-        ports1, ports2, type, speed, level, isp = ' '*6
+        ports1, ports2, speed, level, isp, height = ' '*6
         for container in con_characts:
             attributes=container.find_elements(By.TAG_NAME, 'tr')
             for attribute in attributes:
@@ -98,25 +154,32 @@ def sniff_charact_qtech(name_prode, con_characts):
                 match characts[0].text:
                     case('Порты 10/100/1000BASE-T PoE'):
                         ports1=characts[1].text
+                        ports1=ports1.split(' ')[0]
                     case('Порты 10/100/1000BASE-T'):
                         ports1=characts[1].text
+                        ports1=ports1.split(' ')[0]
                     case('Порты 10GbE SFP+'):
                         ports2=characts[1].text
+                        ports2=ports2.split(' ')[0]
                     case('Порты 100/1000BASE-X SFP'):
                         ports2=characts[1].text
+                        ports2=ports2.split(' ')[0]
                     case('Порты комбо 1000BASE-T\SFP'):
                         ports2=characts[1].text
-                    case('Тип коммутации'):
-                        type=characts[1].text
+                        ports2=ports2.split(' ')[0]
                     case('Пропускная способность'):
                         speed=characts[1].text
                     case('Уровень коммутатора'):
                         level=characts[1].text
                     case('Вариант исполнения'):
                         isp=characts[1].text
-        print(f"Connection type: {ports1, ports2, type, speed, level, isp, 'управляемый'}")
+                    case('Высота, U'):
+                        height=characts[1].text
+        if (ports1!=' ') & (ports2!=' ') & (level!=' ') & (speed!=' '):
+            stack_info=[ports1, ports2, level, speed, 'управляемый', isp, height]
+            database_open(name_prode, stack_info, base_inf)
     elif (name_prode=='Неуправляемые коммутаторы'):
-        ports1, ports2, type, speed, level, isp = ' '*6
+        ports1, ports2, speed, level, isp = ' '*5
         for container in con_characts:
             attributes=container.find_elements(By.TAG_NAME, 'tr')
             for attribute in attributes:
@@ -124,21 +187,23 @@ def sniff_charact_qtech(name_prode, con_characts):
                 match characts[0].text:
                     case('Порты 10/100BASE-T'):
                         ports1=characts[1].text
+                        ports1=ports1.split(' ')[0]
                     case('Порты 10/100BASE-T PoE'):
                         ports1=characts[1].text
+                        ports1=ports1.split(' ')[0]
                     case('Порты 10GbE SFP+'):
                         ports2=characts[1].text
-                    case('Тип коммутации'):
-                        type=characts[1].text
+                        ports2=ports2.split(' ')[0]
                     case('Пропускная способность'):
                         speed=characts[1].text
                     case('Уровень коммутатора'):
                         level=characts[1].text
                     case('Вариант исполнения'):
                         isp=characts[1].text
-        print(f"Connection type: {ports1, ports2, type, speed, level, isp, 'неуправляемый'}")
+        stack_info=[ports1, ports2, level, speed, 'неуправляемый', isp]
+        database_open(name_prode, stack_info, base_inf)
     elif (name_prode=='Маршрутизаторы'):
-        ports1, ports2=' '*2
+        ports, ports1=' '*2
         for container in con_characts:
             attributes=container.find_elements(By.TAG_NAME, 'tr')
             for attribute in attributes:
@@ -146,14 +211,18 @@ def sniff_charact_qtech(name_prode, con_characts):
                 match characts[0].text:
                     case('Порты 10/100/1000BASE-T (LAN)'):
                         ports1=characts[1].text
+                        ports1=ports1.split(' ')[0]
                     case('Порты 10/100/1000BASE-T (WAN)'):
-                        ports2=characts[1].text
+                        ports=characts[1].text
+                        ports=ports.split(' ')[0]
                     case('Порты комбо 1000BASE-T\SFP (WAN)'):
-                        ports2=characts[1].text
+                        ports=characts[1].text
+                        ports=ports.split(' ')[0]
                         
-        print(f"Connection type: {ports1, ports2}")
+        stack_info=[ports, ports1]
+        database_open(name_prode, stack_info, base_inf)
     elif (name_prode=='Серверные платформы'):
-        ports, count1, count2, count3=' '*4
+        ports, ports21, ports22, proc, count_proc, height, count1, count2, count3=' '*9
         for container in con_characts:
             attributes=container.find_elements(By.TAG_NAME, 'tr')
             for attribute in attributes:
@@ -161,6 +230,20 @@ def sniff_charact_qtech(name_prode, con_characts):
                 match characts[0].text:
                     case('Порты 10/100/1000BASE-T'):
                         ports=characts[1].text
+                        ports=ports.split(' ')[0]
+                    case('Процессор'):
+                        proc=characts[1].text
+                        proc=proc.split(', ')[0]
+                        proc=proc.split('* ')[1]
+                    case('Количество процессоров'):
+                        count_proc=characts[1].text
+                    case('Высота, U'):
+                        height=characts[1].text
+                    case('USB интерфейс'):
+                        ports2=characts[1].text
+                        ports2=ports.split(', ')
+                        ports21=ports2[0]
+                        ports21=ports21.split(' ')[0]
                     case('Дисковая корзина (front)'):
                         count1=(characts[1].text).split('*')
                         count1=int(count1[0])
@@ -170,63 +253,102 @@ def sniff_charact_qtech(name_prode, con_characts):
                         count3=count1+count2
         if (count3==' '):
             count1=str(count1)      
-            print(f"Connection type: {ports, count1}")
+            stack_info=[ports, ports21, proc, count_proc, count1, height]
+            database_open(name_prode, stack_info, base_inf)
         else:
             count3=str(count3)
-            print(f"Connection type: {ports, count3}")
+            stack_info=[ports, ports21, proc, count_proc, count3, height]
+            database_open(name_prode, stack_info, base_inf)
     elif (name_prode=='Внешние точки доступа'):
-        ports, stand, var=' '*3
+        wan, lan, stand, var=' '*4
         for container in con_characts:
             attributes=container.find_elements(By.TAG_NAME, 'tr')
             for attribute in attributes:
                 characts=attribute.find_elements(By.TAG_NAME, 'td')
                 match characts[0].text:
                     case('Порты 10/100/1000BASE-T (WAN)'):
-                        ports=characts[1].text
+                        wan=characts[1].text
+                        wan=wan.split(' ')[0]
                     case('Порты 10/100/1000/2500BASE-T (WAN)'):
-                        ports=characts[1].text
+                        wan=characts[1].text
+                        wan=wan.split(' ')[0]
                     case('Порты 10/100/1000BASE-T'):
-                        ports=characts[1].text
+                        wan=characts[1].text
+                        wan=wan.split(' ')[0]
+                    case('Порты 10/100/1000BASE-T (LAN)'):
+                        lan=characts[1].text
+                        lan=lan.split(' ')[0]
                     case('Стандарт Wi-Fi'):
                         stand=characts[1].text
                     case('Варианты крепления'):
                         var=characts[1].text
-        print(f"Connection type: {ports, stand, var, 'вне помещения'}")
+        if (lan!=' '):
+            if (wan!=' '):
+                lan_wan=int(lan)+int(wan)
+                stack_info=[lan_wan, stand, 'вне помещения', var]
+                database_open(name_prode, stack_info, base_inf)
+            else:
+                stack_info=[lan, stand, 'вне помещения', var]
+                database_open(name_prode, stack_info, base_inf)
+        elif (wan!=' '):
+                stack_info=[wan, stand, 'вне помещения', var]
+                database_open(name_prode, stack_info, base_inf)
     elif (name_prode=='Внутренние точки доступа'):
-        ports1, ports2, stand, var=' '*4
+        wan, lan, stand, var=' '*4
         for container in con_characts:
             attributes=container.find_elements(By.TAG_NAME, 'tr')
             for attribute in attributes:
                 characts=attribute.find_elements(By.TAG_NAME, 'td')
                 match characts[0].text:
                     case('Порты 10/100/1000/2500BASE-T (LAN)'):
-                        ports1=characts[1].text
+                        lan=characts[1].text
+                        lan=lan.split(' ')[0]
                     case('Порты 10/100/1000BASE-T (LAN)'):
-                        ports1=characts[1].text
+                        lan=characts[1].text
+                        lan=lan.split(' ')[0]
                     case('Порты 10/100/1000/2500BASE-T (WAN)'):
-                        ports2=characts[1].text
+                        wan=characts[1].text
+                        wan=wan.split(' ')[0]
                     case('Порты 10/100/1000BASE-T (WAN)'):
-                        ports2=characts[1].text
+                        wan=characts[1].text
+                        wan=wan.split(' ')[0]
                     case('Стандарт Wi-Fi'):
                         stand=characts[1].text
                     case('Варианты крепления'):
                         var=characts[1].text
-        print(f"Connection type: {ports1, ports2, stand, var, 'внутри помещения'}")
+                        var=var.split(' (')[0]
+
+        if (lan!=' '):
+            if (wan!=' '):
+                lan_wan=int(lan)+int(wan)
+                stack_info=[lan_wan, stand, 'внутри помещения', var]
+                database_open(name_prode, stack_info, base_inf)
+            else:
+                stack_info=[lan, stand, 'внутри помещения', var]
+                database_open(name_prode, stack_info, base_inf)
+        elif (wan!=' '):
+                stack_info=[wan, stand, 'внутри помещения', var]
+                database_open(name_prode, stack_info, base_inf)
+
     elif (name_prode=='Wi-Fi роутеры'):
-        ports1, ports2, stand, ipv6=' '*4
+        wan, lan, stand, ipv6=' '*4
         for container in con_characts:
             attributes=container.find_elements(By.TAG_NAME, 'tr')
             for attribute in attributes:
                 characts=attribute.find_elements(By.TAG_NAME, 'td')
                 match characts[0].text:
                     case('Порты 10/100BASE-T (LAN)'):
-                        ports1=characts[1].text
+                        lan=characts[1].text
+                        lan=lan.split(' ')[0]
                     case('Порты 10/100/1000BASE-T (LAN)'):
-                        ports1=characts[1].text
+                        lan=characts[1].text
+                        lan=lan.split(' ')[0]
                     case('Порты 10/100BASE-T (WAN)'):
-                        ports2=characts[1].text
+                        wan=characts[1].text
+                        wan=wan.split(' ')[0]
                     case('Порты 10/100/1000BASE-T (WAN)'):
-                        ports2=characts[1].text
+                        wan=characts[1].text
+                        wan=wan.split(' ')[0]
                     case('Стандарт Wi-Fi'):
                         stand=characts[1].text
                     case('Сетевые протоколы'):
@@ -236,7 +358,9 @@ def sniff_charact_qtech(name_prode, con_characts):
                             ipv6='есть'
                         else:
                             ipv6='нет'
-        print(f"Connection type: {ports1, ports2, stand, ipv6}")
+
+        stack_info=[wan, lan, stand, ipv6]
+        database_open(name_prode, stack_info, base_inf)
 
 driver = webdriver.Chrome()
 
