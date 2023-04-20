@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Конфигуратор сетевого оборудования</title>
+</head>
+<body>
+ <h1>Конфигуратор сетевого оборудования</h1>
+<form method="POST" action="{{ url_for('logout')}}">
+ <button type="submit">Выйти из аккаунта</button>
+</form>
+ <form id="myform" method="POST" action="{{ url_for('submit') }}">
+
+  <h2>Коммутаторы</h2>
+  <div><label for="switch_field1"> Количество WAN/LAN портов:</label>
+  <input type="text" name="switch_field1" id="switch_field1">
+  <span id="field1_error" class="error"></span></div>
+  <div><label for="switch_field2">Количество SFP портов:</label>
+  <input type="text" name="switch_field2" id="switch_field2"></div>
+  <div><label for="switch_listbox1">Выберите уровень коммутатора:</label>
+  <select name="switch_listbox1" id="switch_listbox1">
+    <option value=""></option>
+    {% for row in row1 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+  <div><label for="switch_listbox2">Выберите скорость(пропускную способность):</label>
+  <select name="switch_listbox2" id="switch_listbox2">
+    <option value=""></option>
+    {% for row in row2 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+  <div><label for="switch_listbox3">Выберите вид коммутатора:</label>
+  <select name="switch_listbox3" id="switch_listbox3">
+    <option value=""></option>
+    {% for row in row3 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+  <div><label for="switch_listbox4">Выберите место размещения коммутатора:</label>
+  <select name="switch_listbox4" id="switch_listbox4">
+    <option value=""></option>
+    {% for row in row4 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+
+  <h2>Маршрутизаторы</h2>
+  <div><label for="router_field1"> Количество WAN портов:</label>
+  <input type="text" name="router_field1" id="router_field1">
+  <div><label for="router_field2">Количество LAN портов:</label>
+  <input type="text" name="router_field2" id="router_field2">
+  <span id="field2_error" class="error"></span></div>
+  <div><label for="router_field3">Количество настраиваемых WAN/LAN портов:</label>
+  <input type="text" name="router_field3" id="router_field3"></div>
+  <div><label for="router_listbox">Поддержка IPv6:</label>
+  <select name="router_listbox" id="router_listbox">
+    <option value=""></option>
+    {% for row in row12 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+
+  <h2>Wi-Fi роутеры</h2>
+  <div><label for="wifi_router_field1"> Количество WAN портов:</label>
+  <input type="text" name="wifi_router_field1" id="wifi_router_field1">
+  <div><label for="wifi_router_field2">Количество LAN портов:</label>
+  <input type="text" name="wifi_router_field2" id="wifi_router_field2"></div>
+  <div><label for="wifi_router_listbox1">Стандарт Wi-Fi:</label>
+    <select name="wifi_router_listbox1" id="wifi_router_listbox1">
+      <option value=""></option>
+      {% for row in row13 %}
+        <option value="{{ row[0] }}">{{ row[0] }}</option>
+      {% endfor %}
+    </select>
+    <span id="list1_error" class="error"></span></div>
+    <div><label for="wifi_router_listbox2">Скорость передачи данных:</label>
+      <select name="wifi_router_listbox2" id="wifi_router_listbox2">
+        <option value=""></option>
+        {% for row in row14 %}
+          <option value="{{ row[0] }}">{{ row[0] }}</option>
+        {% endfor %}
+      </select></div>
+  <div><label for="wifi_router_listbox3">Поддержка IPv6:</label>
+  <select name="wifi_router_listbox3" id="wifi_router_listbox3">
+    <option value=""></option>
+    {% for row in row15 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+
+  <h2>Серверные платформы</h2>
+  <div><label for="server_field1"> Количество LAN портов:</label>
+  <input type="text" name="server_field1" id="server_field1">
+  <div><label for="server_field2">Количество USB портов:</label>
+  <input type="text" name="server_field2" id="server_field2"></div>
+  <div><label for="server_listbox1">Выберите процессор:</label>
+    <select name="server_listbox1" id="server_listbox1">
+      <option value=""></option>
+      {% for row in row5 %}
+        <option value="{{ row[0] }}">{{ row[0] }}</option>
+      {% endfor %}
+    </select></div>
+  <div><label for="server_field3">Количество процессоров:</label>
+  <input type="text" name="server_field3" id="server_field3"></div>
+  <div><label for="server_field4">Количество Тб памяти:</label>
+  <input type="text" name="server_field4" id="server_field4">
+  <span id="field3_error" class="error"></span></div>
+
+  <h2>Точки доступа</h2>
+  <div><label for="access_point_field1"> Количество WAN/LAN портов:</label>
+  <input type="text" name="access_point_field1" id="access_point_field1">
+  <div><label for="access_point_listbox1">Стандарт Wi-Fi:</label>
+    <select name="access_point_listbox1" id="access_point_listbox1">
+      <option value=""></option>
+      {% for row in row6 %}
+        <option value="{{ row[0] }}">{{ row[0] }}</option>
+      {% endfor %}
+    </select>
+    <span id="list2_error" class="error"></span></div>
+    <div><label for="access_point_listbox2">Размещение:</label>
+      <select name="access_point_listbox2" id="access_point_listbox2">
+        <option value=""></option>
+        {% for row in row7 %}
+          <option value="{{ row[0] }}">{{ row[0] }}</option>
+        {% endfor %}
+      </select></div>
+  <div><label for="access_point_listbox3">Варианты крепления:</label>
+  <select name="access_point_listbox3" id="access_point_listbox3">
+    <option value=""></option>
+    {% for row in row8 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+
+  <h2>Шкафы и стойки</h2>
+  <div><label for="cabinet_listbox1">Выберите установку:</label>
+    <select name="cabinet_listbox1" id="cabinet_listbox1">
+      <option value=""></option>
+      {% for row in row9 %}
+        <option value="{{ row[0] }}">{{ row[0] }}</option>
+      {% endfor %}
+    </select></div>
+  <div><label for="cabinet_field1"> Количество секций:</label>
+  <input type="text" name="cabinet_field1" id="cabinet_field1">
+  <span id="field4_error" class="error"></span></div>
+  <div><label for="cabinet_listbox2">Выберите защиту:</label>
+      <select name="cabinet_listbox2" id="cabinet_listbox2">
+        <option value=""></option>
+        {% for row in row10 %}
+          <option value="{{ row[0] }}">{{ row[0] }}</option>
+        {% endfor %}
+      </select></div>
+  <div><label for="cabinet_field2"> Введите высоту:</label>
+  <input type="text" name="cabinet_field2" id="cabinet_field2">
+  <div><label for="cabinet_listbox3">Выберите тип шкафа:</label>
+  <select name="cabinet_listbox3" id="cabinet_listbox3">
+    <option value=""></option>
+    {% for row in row11 %}
+      <option value="{{ row[0] }}">{{ row[0] }}</option>
+    {% endfor %}
+  </select></div>
+
+  <h2>Сетевые хранилища</h2>
+  <div><label for="network_storage_field1"> Количество отсеков памяти:</label>
+  <input type="text" name="network_storage_field1" id="network_storage_field1">
+  <div><label for="network_storage_field2"> Максимально поддерживаемый объем памяти:</label>
+  <input type="text" name="network_storage_field2" id="network_storage_field2">
+  <span id="field5_error" class="error"></span></div>
+  <div><label for="network_storage_field3"> Количество портов Ethernet:</label>
+  <input type="text" name="network_storage_field3" id="network_storage_field3">
+
+  <div><input type="submit" value="Выбрать"></div>
+ </form>
+
+ <script>
+  document.getElementById("myform").addEventListener("submit", function(event) {
+
+    var field1 = document.getElementById("switch_field1").value;
+    var field2 = document.getElementById("router_field2").value;
+    let list1 = document.getElementById("wifi_router_listbox1")
+    var field3 = document.getElementById("server_field4").value
+    var list2 = document.getElementById("access_point_listbox1")
+    var field4 = document.getElementById("cabinet_field1").value
+    var field5 = document.getElementById("network_storage_field2").value
+    if (field1 === "" || isNaN(field1)) {
+      event.preventDefault();
+      document.getElementById("field1_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
+    } else {
+      document.getElementById("field1_error").innerHTML = "";
+    }
+    if (field2 === "" || isNaN(field2)) {
+      event.preventDefault();
+      document.getElementById("field2_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
+    } else {
+      document.getElementById("field2_error").innerHTML = "";
+    }
+    if (list1.children.length == 0) {
+        document.getElementById("list1_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
+    } else if (!list1.value) {
+      document.getElementById("list1_error").innerHTML = "Пожалуйста введите данные в обязательное поле!"
+      } else {
+        document.getElementById("list1_error").innerHTML = "";
+      }
+    if (field3 === "" || isNaN(field3)) {
+      event.preventDefault();
+      document.getElementById("field3_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
+    } else {
+      document.getElementById("field3_error").innerHTML = "";
+    }
+    if (field4 === "" || isNaN(field4)) {
+      event.preventDefault();
+      document.getElementById("field4_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
+    } else {
+      document.getElementById("field4_error").innerHTML = "";
+    }
+    if (list2.value == "") {
+        document.getElementById("list2_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
+      } else if (!list2.value) {
+      document.getElementById("list2_error").innerHTML = "Пожалуйста введите данные в обязательное поле!"
+      } else {
+        document.getElementById("list2_error").innerHTML = "";
+      }
+    if (field5 === "" || isNaN(field5)) {
+      event.preventDefault();
+      document.getElementById("field5_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
+    } else {
+      document.getElementById("field5_error").innerHTML = "";
+    }
+  });
+ </script>
+
+ {% if switch_results %}
+  <h2>Подходящие Коммутаторы</h2>
+  <ul>
+   {% for result in switch_results %}
+   <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+   {% endfor %}
+  </ul>
+ {% endif %}
+
+ {% if router_results %}
+ <h2>Подходящие Маршрутизаторы</h2>
+ <ul>
+  {% for result in router_results %}
+  <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+  {% endfor %}
+ </ul>
+{% endif %}
+
+{% if wifi_router_results %}
+<h2>Подходящие Wi-Fi роутеры</h2>
+<ul>
+ {% for result in wifi_router_results %}
+ <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if server_results %}
+<h2>Подходящие Сервера</h2>
+<ul>
+ {% for result in server_results %}
+ <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if access_point_results %}
+<h2>Подходящие Точки доступа Wi-Fi</h2>
+<ul>
+ {% for result in access_point_results %}
+ <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if cabinet_results %}
+<h2>Подходящие Шкафы и стойки</h2>
+<ul>
+ {% for result in cabinet_results %}
+ <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if network_storage_results %}
+<h2>Подходящие Сетевые хранилища</h2>
+<ul>
+ {% for result in network_storage_results %}
+ <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+</body>
+</html>

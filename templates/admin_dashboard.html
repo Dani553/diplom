@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Dashboard</title>
+  </head>
+  <style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 8px;
+        border: 1px solid black;
+    }
+
+    td {
+        background-color: #4caf7a;
+        color: rgb(0, 0, 0);
+    }
+
+    tr:nth-child(even) {background-color: #f2f2f2;}
+</style>
+  <body>
+    <form method="POST" action="{{ url_for('logout')}}">
+        <button type="submit">Выйти из аккаунта</button>
+    </form>
+    <h1>Выберите таблицу для вывода:</h1>
+    <form method="post" action="{{ url_for('admin_dashboard') }}">
+      <select name="table_name">
+        <option value="com">Коммутаторы</option>
+        <option value="marsh">Маршрутизаторы</option>
+        <option value="router">Wi-Fi роутеры</option>
+        <option value="server">Серверные платформы</option>
+        <option value="toch">Точки доступа Wi-Fi</option>
+        <option value="shkaf">Шкафы и стойки</option>
+        <option value="chran">Сетевые хранилища</option>
+      </select>
+      <input type="submit" id="display" name="submit" value="Вывод таблицы">
+
+      <h2>Выберите таблицу для внесения изменений:</h2>
+        <div><select name="table_name1">
+            <option value="com">Коммутаторы</option>
+            <option value="marsh">Маршрутизаторы</option>
+            <option value="router">Wi-Fi роутеры</option>
+            <option value="server">Серверные платформы</option>
+            <option value="toch">Точки доступа Wi-Fi</option>
+            <option value="shkaf">Шкафы и стойки</option>
+            <option value="chran">Сетевые хранилища</option>
+          </select>
+          <input type="submit" id="insert" name="submit" value="Вставка данных">
+          <input type="submit" id="update" name="submit" value="Изменение данных">
+          <input type="submit" id="delete" name="submit" value="Удаление данных" style="margin-bottom: 20px;"></div>
+ 
+          <div><label for="field0"> Введите ID:</label>
+            <input type="text" name="field0" id="field0">
+            <div><label for="field01"> Введите id_charact:</label>
+            <input type="text" name="field01" id="field01">
+          <div><label for="field1"> Введите название:</label>
+            <input type="text" name="field1" id="field1">
+            <div><label for="field2">Введите цену:</label>
+            <input type="text" name="field2" id="field2"></div>
+            <div><label for="field3">Введите ссылку:</label>
+            <input type="text" name="field3" id="field3"></div>
+            <div><label for="field4">Введите первую характеристику:</label>
+            <input type="text" name="field4" id="field4"></div>
+            <div><label for="field5">Введите вторую характеристику:</label>
+            <input type="text" name="field5" id="field5"></div>
+            <div><label for="field6">Введите третью характеристику:</label>
+            <input type="text" name="field6" id="field6"></div>
+            <div><label for="field7">Введите четвертую характеристику:</label>
+            <input type="text" name="field7" id="field7"></div>
+            <div><label for="field8">Введите пятую характеристику:</label>
+            <input type="text" name="field8" id="field8"></div>
+            <div><label for="field9">Введите шестую характеристику:</label>
+            <input type="text" name="field9" id="field9"></div>
+            <div><label for="field10">Введите седьмую характеристику:</label>
+            <input type="text" name="field10" id="field10"></div>
+    </form>
+
+    
+    {% if table %}
+      <h2>{{ table.title() }}</h2>
+
+      <table>
+        <thead>
+          <tr>
+            {% for column in columns %}
+              <th>{{ column }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for value in row %}
+                <td>{{ value }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    
+  </body>
+</html>
