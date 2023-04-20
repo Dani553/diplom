@@ -189,41 +189,298 @@ def admin_dashboard():
                 field10 = request.form['field10']
                 table_name1 = request.form.getlist('table_name1')
 
+                query=[]
+
                 if table_name1==['com']:
-                    cur.execute(f"UPDATE charact_com SET charact2='{field4}', charact3='{field5}', charact4='{field6}', charact5='{field7}', charact6='{field8}', charact7='{field9}', charact8='{field10}' WHERE id_charact='{field01}'") 
+                    if field01!='':
+                        update_query=f"UPDATE charact_com SET "
+                        if field4!='':
+                            query.append(f"charact2='{field4}'")
+                        if field5!='':
+                            query.append(f"charact3='{field5}'")
+                        if field6!='':
+                            query.append(f"charact4='{field6}'")
+                        if field7!='':
+                            query.append(f"charact5='{field7}'")
+                        if field8!='':
+                            query.append(f"charact6='{field8}'")
+                        if field9!='':
+                            query.append(f"charact7='{field9}'")
+                        if field10!='':
+                            query.append(f"charact8='{field10}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_charact='{field01}'"
+                        cur.execute(update_query) 
+                        conn.commit()
+                    if field0!='':
+                        query=[]
+                        update_query=f"UPDATE com SET "
+                        if field1!='':
+                            query.append(f"name='{field1}'")
+                        if field2!='':
+                            query.append(f"price='{field2}'")
+                        if field3!='':
+                            query.append(f"link='{field3}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_com='{field0}'"
+                        cur.execute(update_query)
+                        conn.commit()
+                elif table_name1==['marsh']:
+                    if field01!='':
+                        update_query=f"UPDATE charact_marsh SET "
+                        if field4!='':
+                            query.append(f"charact1='{field4}'")
+                        if field5!='':
+                            query.append(f"charact2='{field5}'")
+                        if field6!='':
+                            query.append(f"charact3='{field6}'")
+                        if field7!='':
+                            query.append(f"charact4='{field7}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_charact='{field01}'"
+                        cur.execute(update_query) 
+                        conn.commit()
+                    if field0!='':
+                        query=[]
+                        update_query=f"UPDATE marsh SET "
+                        if field1!='':
+                            query.append(f"name='{field1}'")
+                        if field2!='':
+                            query.append(f"price='{field2}'")
+                        if field3!='':
+                            query.append(f"link='{field3}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_marsh='{field0}'"
+                        cur.execute(update_query)
+                        conn.commit()
+                elif table_name1==['router']:
+                    print('Hello')
+                    if field01!='':
+                        update_query=f"UPDATE charact_router SET "
+                        if field4!='':
+                            query.append(f"charact1='{field4}'")
+                        if field5!='':
+                            query.append(f"charact2='{field5}'")
+                        if field6!='':
+                            query.append(f"charact3='{field6}'")
+                        if field7!='':
+                            query.append(f"charact4='{field7}'")
+                        if field8!='':
+                            query.append(f"charact5='{field8}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_charact='{field01}'"
+                        cur.execute(update_query) 
+                        conn.commit()
+                    if field0!='':
+                        query=[]
+                        update_query=f"UPDATE router SET "
+                        if field1!='':
+                            query.append(f"name='{field1}'")
+                        if field2!='':
+                            query.append(f"price='{field2}'")
+                        if field3!='':
+                            query.append(f"link='{field3}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_router='{field0}'"
+                        cur.execute(update_query)
+                        conn.commit()
                     conn.commit()
-                    cur.execute(f"UPDATE com SET name='{field1}', price='{field2}', link='{field3}' WHERE id_com='{field0}'")
-                    conn.commit()
-                elif table_name1=='marsh':
-                    cur.execute("UPDATE charact_" + table_name1 + 
-                                " SET charact1=%s, charact2=%s, charact3=%s, charact4=%s WHERE id_charact=%s", 
-                                (field4, field5, field6, field7, field01))
-                    conn.commit()
-                elif table_name1=='router':
-                    cur.execute("UPDATE charact_" + table_name1 + 
-                                " SET charact1=%s, charact2=%s, charact3=%s, charact4=%s, charact5=%s WHERE id_charact=%s" , 
-                                (field4, field5, field6, field7, field8, field01))
-                    conn.commit()
-                elif table_name1=='server':
-                    cur.execute("UPDATE charact_" + table_name1 + 
-                                " SET charact1=%s, charact2=%s, charact3=%s, charact4=%s, charact5=%s, charact6=%s WHERE id_charact=%s", 
-                                (field4, field5, field6, field7, field8, field9, field01))
-                    conn.commit()
-                elif table_name1=='shkaf':
-                    cur.execute("UPDATE charact_" + table_name1 + 
-                                " SET charact1=%s, charact2=%s, charact3=%s, charact4=%s, charact5=%s, charact6=%s WHERE id_charact=%s", 
-                                (field4, field5, field6, field7, field8, field9, field01))
-                    conn.commit()
-                elif table_name1=='toch':
-                    cur.execute("UPDATE charact_" + table_name1 + 
-                                " SET charact2=%s, charact3=%s, charact4=%s, charact5=%s WHERE id_charact=%s", 
-                                (field4, field5, field6, field7, field01))
-                    conn.commit()
-                elif table_name1=='chran':
-                    cur.execute("UPDATE charact_" + table_name1 + 
-                                " SET charact1=%s, charact2=%s, charact3=%s, charact4=%s WHERE id_charact=%s", 
-                                (field4, field5, field6, field7, field01))
-                    conn.commit()
+                elif table_name1==['server']:
+                    if field01!='':
+                        update_query=f"UPDATE charact_server SET "
+                        if field4!='':
+                            query.append(f"charact1='{field4}'")
+                        if field5!='':
+                            query.append(f"charact2='{field5}'")
+                        if field6!='':
+                            query.append(f"charact3='{field6}'")
+                        if field7!='':
+                            query.append(f"charact4='{field7}'")
+                        if field8!='':
+                            query.append(f"charact5='{field8}'")
+                        if field9!='':
+                            query.append(f"charact6='{field9}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_charact='{field01}'"
+                        cur.execute(update_query) 
+                        conn.commit()
+                    if field0!='':
+                        query=[]
+                        update_query=f"UPDATE server SET "
+                        if field1!='':
+                            query.append(f"name='{field1}'")
+                        if field2!='':
+                            query.append(f"price='{field2}'")
+                        if field3!='':
+                            query.append(f"link='{field3}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_server='{field0}'"
+                        cur.execute(update_query)
+                        conn.commit()
+                elif table_name1==['shkaf']:
+                    if field01!='':
+                        update_query=f"UPDATE charact_shkaf SET "
+                        if field4!='':
+                            query.append(f"charact1='{field4}'")
+                        if field5!='':
+                            query.append(f"charact2='{field5}'")
+                        if field6!='':
+                            query.append(f"charact3='{field6}'")
+                        if field7!='':
+                            query.append(f"charact4='{field7}'")
+                        if field8!='':
+                            query.append(f"charact5='{field8}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_charact='{field01}'"
+                        cur.execute(update_query) 
+                        conn.commit()
+                    if field0!='':
+                        query=[]
+                        update_query=f"UPDATE shkaf SET "
+                        if field1!='':
+                            query.append(f"name='{field1}'")
+                        if field2!='':
+                            query.append(f"price='{field2}'")
+                        if field3!='':
+                            query.append(f"link='{field3}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_shkaf='{field0}'"
+                        cur.execute(update_query)
+                        conn.commit()
+                elif table_name1==['toch']:
+                    if field01!='':
+                        update_query=f"UPDATE charact_toch SET "
+                        if field4!='':
+                            query.append(f"charact2='{field4}'")
+                        if field5!='':
+                            query.append(f"charact3='{field5}'")
+                        if field6!='':
+                            query.append(f"charact4='{field6}'")
+                        if field7!='':
+                            query.append(f"charact5='{field7}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_charact='{field01}'"
+                        cur.execute(update_query) 
+                        conn.commit()
+                    if field0!='':
+                        query=[]
+                        update_query=f"UPDATE toch SET "
+                        if field1!='':
+                            query.append(f"name='{field1}'")
+                        if field2!='':
+                            query.append(f"price='{field2}'")
+                        if field3!='':
+                            query.append(f"link='{field3}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_toch='{field0}'"
+                        cur.execute(update_query)
+                        conn.commit()
+                elif table_name1==['chran']:
+                    if field01!='':
+                        update_query=f"UPDATE charact_chran SET "
+                        if field4!='':
+                            query.append(f"charact1='{field4}'")
+                        if field5!='':
+                            query.append(f"charact2='{field5}'")
+                        if field6!='':
+                            query.append(f"charact3='{field6}'")
+                        if field7!='':
+                            query.append(f"charact4='{field7}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_charact='{field01}'"
+                        cur.execute(update_query) 
+                        conn.commit()
+                    if field0!='':
+                        query=[]
+                        update_query=f"UPDATE chran SET "
+                        if field1!='':
+                            query.append(f"name='{field1}'")
+                        if field2!='':
+                            query.append(f"price='{field2}'")
+                        if field3!='':
+                            query.append(f"link='{field3}'")
+                        if query!='':
+                            update_query+= ', '.join(query)
+                        update_query+=f" WHERE id_chran='{field0}'"
+                        cur.execute(update_query)
+                        conn.commit()
+                else:
+                    redirect(url_for('login'))
+                conn.commit()
+
+            elif request.form['submit']=='Удаление данных':
+                field0 = request.form['field0']
+                table_name1 = request.form.getlist('table_name1')
+
+                if table_name1==['com']:
+                    if field0!='':
+                        delete_query1=f"DELETE FROM charact_com USING com WHERE com.id_charact=charact_com.id_charact AND com.id_com='{field0}'"
+                        delete_query=f"DELETE FROM com WHERE id_com='{field0}'"
+                        cur.execute(delete_query1)
+                        cur.execute(delete_query)
+                        conn.commit()
+                
+                elif table_name1==['marsh']:
+                    if field0!='':
+                        delete_query1=f"DELETE FROM charact_marsh USING marsh WHERE marsh.id_charact=charact_marsh.id_charact AND marsh.id_marsh='{field0}'"
+                        delete_query=f"DELETE FROM marsh WHERE id_marsh='{field0}'"
+                        cur.execute(delete_query1)
+                        cur.execute(delete_query)
+                        conn.commit()
+
+                elif table_name1==['router']:
+                    if field0!='':
+                        delete_query1=f"DELETE FROM charact_router USING router WHERE router.id_charact=charact_router.id_charact AND router.id_router='{field0}'"
+                        delete_query=f"DELETE FROM router WHERE id_router='{field0}'"
+                        cur.execute(delete_query1)
+                        cur.execute(delete_query)
+                        conn.commit()
+
+                elif table_name1==['server']:
+                    if field0!='':
+                        delete_query1=f"DELETE FROM charact_server USING server WHERE server.id_charact=charact_server.id_charact AND server.id_server='{field0}'"
+                        delete_query=f"DELETE FROM server WHERE id_server='{field0}'"
+                        cur.execute(delete_query1)
+                        cur.execute(delete_query)
+                        conn.commit()
+                
+                elif table_name1==['shkaf']:
+                    if field0!='':
+                        delete_query1=f"DELETE FROM charact_shkaf USING shkaf WHERE shkaf.id_charact=charact_shkaf.id_charact AND shkaf.id_shkaf='{field0}'"
+                        delete_query=f"DELETE FROM shkaf WHERE id_shkaf='{field0}'"
+                        cur.execute(delete_query1)
+                        cur.execute(delete_query)
+                        conn.commit()
+
+                elif table_name1==['toch']:
+                    if field0!='':
+                        delete_query1=f"DELETE FROM charact_toch USING toch WHERE toch.id_charact=charact_toch.id_charact AND toch.id_toch='{field0}'"
+                        delete_query=f"DELETE FROM toch WHERE id_toch='{field0}'"
+                        cur.execute(delete_query1)
+                        cur.execute(delete_query)
+                        conn.commit()
+
+                elif table_name1==['chran']:
+                    if field0!='':
+                        delete_query1=f"DELETE FROM charact_chran USING chran WHERE chran.id_charact=charact_chran.id_charact AND chran.id_chran='{field0}'"
+                        delete_query=f"DELETE FROM chran WHERE id_chran='{field0}'"
+                        cur.execute(delete_query1)
+                        cur.execute(delete_query)
+                        conn.commit()
+
                 else:
                     redirect(url_for('login'))
                 conn.commit()
