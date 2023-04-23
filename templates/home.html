@@ -8,14 +8,15 @@
 <form method="POST" action="{{ url_for('logout')}}">
  <button type="submit">Выйти из аккаунта</button>
 </form>
+<form method="POST" action="{{ url_for('korzina')}}">
+  <button type="submit">Вывести предыдущие выбранные сетевые оборудования</button>
+ </form>
  <form id="myform" method="POST" action="{{ url_for('submit') }}">
 
   <h2>Коммутаторы</h2>
   <div><label for="switch_field1"> Количество WAN/LAN портов:</label>
   <input type="text" name="switch_field1" id="switch_field1">
   <span id="field1_error" class="error"></span></div>
-  <div><label for="switch_field2">Количество SFP портов:</label>
-  <input type="text" name="switch_field2" id="switch_field2"></div>
   <div><label for="switch_listbox1">Выберите уровень коммутатора:</label>
   <select name="switch_listbox1" id="switch_listbox1">
     <option value=""></option>
@@ -46,13 +47,9 @@
   </select></div>
 
   <h2>Маршрутизаторы</h2>
-  <div><label for="router_field1"> Количество WAN портов:</label>
+  <div><label for="router_field1"> Количество WAN/LAN портов:</label>
   <input type="text" name="router_field1" id="router_field1">
-  <div><label for="router_field2">Количество LAN портов:</label>
-  <input type="text" name="router_field2" id="router_field2">
   <span id="field2_error" class="error"></span></div>
-  <div><label for="router_field3">Количество настраиваемых WAN/LAN портов:</label>
-  <input type="text" name="router_field3" id="router_field3"></div>
   <div><label for="router_listbox">Поддержка IPv6:</label>
   <select name="router_listbox" id="router_listbox">
     <option value=""></option>
@@ -62,10 +59,8 @@
   </select></div>
 
   <h2>Wi-Fi роутеры</h2>
-  <div><label for="wifi_router_field1"> Количество WAN портов:</label>
+  <div><label for="wifi_router_field1"> Количество WAN/LAN портов:</label>
   <input type="text" name="wifi_router_field1" id="wifi_router_field1">
-  <div><label for="wifi_router_field2">Количество LAN портов:</label>
-  <input type="text" name="wifi_router_field2" id="wifi_router_field2"></div>
   <div><label for="wifi_router_listbox1">Стандарт Wi-Fi:</label>
     <select name="wifi_router_listbox1" id="wifi_router_listbox1">
       <option value=""></option>
@@ -90,7 +85,7 @@
   </select></div>
 
   <h2>Серверные платформы</h2>
-  <div><label for="server_field1"> Количество LAN портов:</label>
+  <div><label for="server_field1"> Количество WAN/LAN портов:</label>
   <input type="text" name="server_field1" id="server_field1">
   <div><label for="server_field2">Количество USB портов:</label>
   <input type="text" name="server_field2" id="server_field2"></div>
@@ -177,7 +172,7 @@
   document.getElementById("myform").addEventListener("submit", function(event) {
 
     var field1 = document.getElementById("switch_field1").value;
-    var field2 = document.getElementById("router_field2").value;
+    var field2 = document.getElementById("router_field1").value;
     let list1 = document.getElementById("wifi_router_listbox1")
     var field3 = document.getElementById("server_field4").value
     var list2 = document.getElementById("access_point_listbox1")
@@ -234,7 +229,7 @@
   <h2>Подходящие Коммутаторы</h2>
   <ul>
    {% for result in switch_results %}
-   <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+   <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
    {% endfor %}
   </ul>
  {% endif %}
@@ -243,7 +238,7 @@
  <h2>Подходящие Маршрутизаторы</h2>
  <ul>
   {% for result in router_results %}
-  <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+  <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
   {% endfor %}
  </ul>
 {% endif %}
@@ -252,7 +247,7 @@
 <h2>Подходящие Wi-Fi роутеры</h2>
 <ul>
  {% for result in wifi_router_results %}
- <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
  {% endfor %}
 </ul>
 {% endif %}
@@ -261,7 +256,7 @@
 <h2>Подходящие Сервера</h2>
 <ul>
  {% for result in server_results %}
- <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
  {% endfor %}
 </ul>
 {% endif %}
@@ -270,7 +265,7 @@
 <h2>Подходящие Точки доступа Wi-Fi</h2>
 <ul>
  {% for result in access_point_results %}
- <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
  {% endfor %}
 </ul>
 {% endif %}
@@ -279,7 +274,7 @@
 <h2>Подходящие Шкафы и стойки</h2>
 <ul>
  {% for result in cabinet_results %}
- <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
  {% endfor %}
 </ul>
 {% endif %}
@@ -288,7 +283,72 @@
 <h2>Подходящие Сетевые хранилища</h2>
 <ul>
  {% for result in network_storage_results %}
- <li>{{ result[0] }} <div>{{ result[1] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+
+
+{% if inform_com %}
+  <h2>Подходившие коммутаторы</h2>
+  <ul>
+   {% for result in inform_com %}
+   <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
+   {% endfor %}
+  </ul>
+ {% endif %}
+
+ {% if inform_marsh %}
+ <h2>Подходившие маршрутизаторы</h2>
+ <ul>
+  {% for result in inform_marsh %}
+  <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
+  {% endfor %}
+ </ul>
+{% endif %}
+
+{% if inform_router %}
+<h2>Подходившие Wi-Fi роутеры</h2>
+<ul>
+ {% for result in inform_router %}
+ <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if inform_server %}
+<h2>Подходившие сервера</h2>
+<ul>
+ {% for result in inform_server %}
+ <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if inform_toch %}
+<h2>Подходившие точки доступа Wi-Fi</h2>
+<ul>
+ {% for result in inform_toch %}
+ <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if inform_shkaf %}
+<h2>Подходившие шкафы и стойки</h2>
+<ul>
+ {% for result in inform_shkaf %}
+ <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
+ {% endfor %}
+</ul>
+{% endif %}
+
+{% if inform_chran %}
+<h2>Подходившие сетевые хранилища</h2>
+<ul>
+ {% for result in inform_chran %}
+ <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
  {% endfor %}
 </ul>
 {% endif %}

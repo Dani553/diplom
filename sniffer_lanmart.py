@@ -1,14 +1,16 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import WebDriverException
 import time
 import psycopg2
+import os
+from dotenv import load_dotenv
 
 def database_open(name_prod, stack_info, base_inf):
+    load_dotenv()
+    db_password = os.getenv("DB_PASSWORD")
     conn = psycopg2.connect(dbname='postgres', user='postgres', 
-                        password='14789635', host='localhost')
+                        password=db_password, host='localhost')
     cursor = conn.cursor()
     
     database_input(name_prod, cursor, stack_info, base_inf)
@@ -20,23 +22,24 @@ def database_open(name_prod, stack_info, base_inf):
 def database_input(name_prod, cursor, stack, base_inf):
     match name_prod:
         case('Беспроводные маршрутизаторы'):
-            cursor.execute("""INSERT INTO charact_router (charact1, charact3, charact4, charact5) values (%s, %s, %s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_router ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Характеристики Wi-Fi роутеров" ("Порты WAN/LAN", "Стандарты Wi-Fi", "Скорость передачи", "Поддержка IPv6") values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики Wi-Fi роутеров" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO router (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Wi-Fi роутеры" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Маршрутизаторы'):
-            cursor.execute("""INSERT INTO charact_marsh (charact2, charact4) values (%s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_marsh ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Характеристики маршрутизаторов" ("Порты WAN/LAN", "Поддержка IPv6") values (%s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики маршрутизаторов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO marsh (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Маршрутизаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Коммутаторы'):
-            cursor.execute("""INSERT INTO charact_com (charact2, charact3, charact4, charact5, charact7, charact8) values (%s, %s, %s, %s, %s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_com ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Характеристики коммутаторов" ("Порты WAN/LAN", "Уровень", "Пропускная способность(Скорость)", "Вид", "Размещение") values (%s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики коммутаторов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO com (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Коммутаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+
 
 def sniff_info_lanmart(name_prode):
     products = driver.find_elements(By.CSS_SELECTOR, 'div.item-area')[:10]
@@ -150,7 +153,7 @@ def sniff_dop_charact_lanmart(name_prode, connection_type, base_inf):
             stack=[ports, ipv6]
             database_open(name_prode, stack, base_inf)
     elif (name_prode=='Коммутаторы'):
-            ports, ports1, speed, level, size=' '*5
+            ports, speed, level, size=' '*4
             for i in range(len(connection_type)):
 
                 charact=connection_type[i]
@@ -163,17 +166,6 @@ def sniff_dop_charact_lanmart(name_prode, connection_type, base_inf):
                                 ports=charact_val
                                 ports=ports.split(' ')[0]
                                 ports=ports.replace('x', '')
-                            case('SFP+ порт'):
-                                if (len(charact_val.split(' '))>1):
-                                    ports1=charact_val.split(' ')[0]
-                                else:
-                                    ports1=charact_val
-                            case('SFP порт'):
-                                if (len(charact_val.split(' '))>1):
-                                    ports1=charact_val.split(' ')[0]
-                                    ports1=ports1.replace('x', '')
-                                else:
-                                    ports1=charact_val
                             case('Наличие Гигабитного порта'):
                                 nal=charact_val
                                 if (nal=='ДА'):
@@ -191,21 +183,22 @@ def sniff_dop_charact_lanmart(name_prode, connection_type, base_inf):
 
                 except IndexError:
                     pass
-            if (speed!=' '):
-                stack=[ports, ports1, level, speed, isp, size]
+            if (ports):
+                stack=[ports, level, speed, isp, size]
                 database_open(name_prode, stack, base_inf)
+try:
+    driver = webdriver.Chrome()
 
-driver = webdriver.Chrome()
+    # driver.get('https://www.lanmart.ru/besprovodnye-marshrutizatory-4.html?limit=all')
+    # sniff_info_lanmart('Беспроводные маршрутизаторы')
 
-driver.get('https://www.lanmart.ru/besprovodnye-marshrutizatory-4.html?limit=all')
-sniff_info_lanmart('Беспроводные маршрутизаторы')
+    # driver.get('https://www.lanmart.ru/marshrutizatory.html')
+    # sniff_info_lanmart('Маршрутизаторы')
 
-driver.get('https://www.lanmart.ru/marshrutizatory.html')
-sniff_info_lanmart('Маршрутизаторы')
+    driver.get('https://www.lanmart.ru/kommutatory-tp-link.html')
+    sniff_info_lanmart('Коммутаторы')
 
-# driver.get('https://www.lanmart.ru/kommutatory-tp-link.html')
-# sniff_info_lanmart('Коммутаторы')
+    driver.quit()
 
-
-
-driver.quit()
+except WebDriverException:
+    driver.quit()

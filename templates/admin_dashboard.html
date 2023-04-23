@@ -26,16 +26,29 @@
     <form method="POST" action="{{ url_for('logout')}}">
         <button type="submit">Выйти из аккаунта</button>
     </form>
+    <form action="/sniffer_dns" method="POST">
+        <button type="submit">Добавить данные с сайта DNS</button>
+    </form>
+    <form action="/sniffer_citilink" method="POST">
+      <button type="submit">Добавить данные с сайта Citilink</button>
+    </form>
+    <form action="/sniffer_lanmart" method="POST">
+      <button type="submit">Добавить данные с сайта Lanmart</button>
+    </form>
+    <form action="/sniffer_qtech" method="POST">
+      <button type="submit">Добавить данные с сайта Qtech</button>
+    </form>
+
     <h1>Выберите таблицу для вывода:</h1>
     <form method="post" action="{{ url_for('admin_dashboard') }}">
       <select name="table_name">
-        <option value="com">Коммутаторы</option>
-        <option value="marsh">Маршрутизаторы</option>
-        <option value="router">Wi-Fi роутеры</option>
-        <option value="server">Серверные платформы</option>
-        <option value="toch">Точки доступа Wi-Fi</option>
-        <option value="shkaf">Шкафы и стойки</option>
-        <option value="chran">Сетевые хранилища</option>
+        <option value="Коммутаторы">Коммутаторы</option>
+        <option value="Маршрутизаторы">Маршрутизаторы</option>
+        <option value="Wi-Fi роутеры">Wi-Fi роутеры</option>
+        <option value="Серверные платформы">Серверные платформы</option>
+        <option value="Точки доступа Wi-Fi">Точки доступа Wi-Fi</option>
+        <option value="Шкафы и стойки">Шкафы и стойки</option>
+        <option value="Сетевые хранилища">Сетевые хранилища</option>
       </select>
       <input type="submit" id="display" name="submit" value="Вывод таблицы">
 

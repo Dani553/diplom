@@ -1,20 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
- <title>Login Page</title>
+ <title>Вход в аккаунт</title>
 </head>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f2f2f2;
+  font-family: sans-serif;
+}
+
+.form-container {
+  background-color: #fff;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+label {
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"] {
+  border: none;
+  border-radius: 3px;
+  padding: 10px;
+  font-size: 16px;
+  background-color: #f2f2f2;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  background-color: #e5e5e5;
+}
+
+.btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.btn:hover {
+  background-color: #43A047;
+}
+
+.bottom-text {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.bottom-text a {
+  color: #4CAF50;
+  text-decoration: none;
+}
+
+.error-message {
+    color: #e74c3c;
+  background-color: #f2dede;
+  border: 1px solid #e74;
+  margin-top: 20px;
+  text-align: center;
+}
+</style>
 <body>
- {% if error %}
-  <p>{{ error }}</p>
- {% endif %}
- <form method="POST" action="{{ url_for('login') }}">
-  <label for="username">Username:</label>
-  <input type="text" id="username" name="username"><br><br>
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password"><br><br>
-  <input type="submit" value="Login">
- </form>
- <br>
- <p>Not registered yet? <a href="{{ url_for('register') }}">Register here</a></p>
+ <form method="POST" action="{{ url_for('login') }}" class="form-container">
+  <div class="form-group">
+    <label for="username">Логин:</label>
+    <input type="text" id="username" name="username">
+  </div>
+  <div class="form-group">
+    <label for="password">Пароль:</label>
+    <input type="password" id="password" name="password">
+  </div>
+  <input type="submit" value="Войти" class="btn">
+  {% if error %}
+  <div class="error-message">{{ error }}</div>
+  {% endif %}
+ <p class="bottom-text">Не зарегистрированы? <a href="{{ url_for('register') }}">Зарегистрируйтесь здесь!</a></p>
 </body>
 </html>

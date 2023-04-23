@@ -2,13 +2,17 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import WebDriverException
 import time
 import psycopg2
+import os
+from dotenv import load_dotenv
 
 def database_open(name_prod, stack_info, base_inf):
+    load_dotenv()
+    db_password = os.getenv("DB_PASSWORD")
     conn = psycopg2.connect(dbname='postgres', user='postgres', 
-                        password='14789635', host='localhost')
+                        password=db_password, host='localhost')
     cursor = conn.cursor()
     
     database_input(name_prod, cursor, stack_info, base_inf)
@@ -20,35 +24,35 @@ def database_open(name_prod, stack_info, base_inf):
 def database_input(name_prod, cursor, stack, base_inf):
     match name_prod:
         case('Wi-Fi роутеры'):
-            cursor.execute("""INSERT INTO charact_router (charact1, charact2, charact3, charact4, charact5) values (%s, %s, %s, %s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_router ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Характеристики Wi-Fi роутеров" ("Порты WAN/LAN", "Стандарты Wi-Fi", "Скорость передачи", "Поддержка IPv6") values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики Wi-Fi роутеров" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO router (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
-        case('Точки доступа'):
-            cursor.execute("""INSERT INTO charact_toch (charact2, charact3, charact4, charact5) values (%s, %s, %s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_toch ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Wi-Fi роутеры" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+        case('Точки доступа Wi-Fi'):
+            cursor.execute("""INSERT INTO "Характеристики точек доступа Wi-Fi" ("Порты WAN/LAN", "Стандарты Wi-Fi", "Размещение", "Варианты крепления") values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики точек доступа Wi-Fi" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO toch (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Точки доступа Wi-Fi" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Коммутационные шкафы'):
-            cursor.execute("""INSERT INTO charact_shkaf (charact1, charact2, charact3, charact4, charact5) values (%s, %s, %s, %s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_shkaf ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Характеристики шкафов" ("Установка", "Число секций", "Защита", "Высота", "Тип шкафа") values (%s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики шкафов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO shkaf (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Характеристики шкафов" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Серверные шкафы'):
-            cursor.execute("""INSERT INTO charact_shkaf (charact1, charact2, charact3, charact4, charact5) values (%s, %s, %s, %s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_shkaf ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Характеристики шкафов" ("Установка", "Число секций", "Защита", "Высота", "Тип шкафа") values (%s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики шкафов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO shkaf (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Шкафы и стойки" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Сетевые хранилища'):
-            cursor.execute("""INSERT INTO charact_chran (charact1, charact2, charact3, charact4) values (%s, %s, %s, %s)""", stack)
-            cursor.execute("""SELECT id_charact FROM charact_chran ORDER BY id_charact DESC LIMIT 1""")
+            cursor.execute("""INSERT INTO "Характеристики сетевых хранилищ" ("Количество отсеков", "Максимально поддерживаемый объем", "Количество портов Ethernet") values (%s, %s, %s)""", stack)
+            cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики сетевых хранилищ" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO chran (name, link, price, id_charact) values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Сетевые хранилища" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
 
 def sniff_info_citilink(name_prod):
 
@@ -101,6 +105,7 @@ def sniff_info_citilink(name_prod):
         driver.switch_to.window(driver.window_handles[0])
 
 def prod_inform_citilink(name_prode, connection_type, base_inf):
+    all_ports=0
     ipv6, stand, stand1, stand2, speed, wan, lan, stand3, stand4=' '*9
     if (name_prode=='Wi-Fi роутеры'):
         for i in range(len(connection_type)):
@@ -147,10 +152,16 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                 case('Количество выходных портов 10/100/1000BASE-TX'):
                     lan=connection_type[i+1]
 
-        stand=stand+', '+stand1+', '+stand2+' '+stand3+' '+stand4
-        stack_info=[wan, lan, stand, speed, ipv6]
+        if stand!=' ':
+            stand=stand+', '+stand1+', '+stand2+' '+stand3+' '+stand4
 
-        database_open(name_prode, stack_info, base_inf)
+            if wan!=' ':
+                all_ports+=int(wan)
+            if lan!=' ':
+                all_ports+=int(lan)
+            stack_info=[all_ports, stand, speed, ipv6]
+
+            database_open(name_prode, stack_info, base_inf)
 
     if (name_prode=='Точки доступа'):
         setup, stand, stand1, stand2, stand3, stand4, lan, wan_lan=' '*8
@@ -213,7 +224,7 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
         else:
             rasp='внутри помещения'
         
-        if (setup!=' '):
+        if setup:
             stack_info=[wan_lan, stand, rasp, setup]
 
             database_open(name_prode, stack_info, base_inf)
@@ -232,7 +243,7 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                 case('Размеры (ШхВхГ)'):
                     height=(connection_type[i+1]).split('x')
                     height=height[1]           
-        if (height!=' '):
+        if (count!=' '):
             stack_info=[razm, count, sec, height, 'cерверные шкафы']
             database_open(name_prode, stack_info, base_inf)
 
@@ -253,13 +264,14 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                         height=connection_type[i+1].split('x')
                         height=height[1]
                     else:
-                        height=height[1]           
+                        height=height[1]
 
-        stack_info=[razm, count, sec, height, 'коммутационные шкафы']
-        database_open(name_prode, stack_info, base_inf)
+        if (count!=' '):
+            stack_info=[razm, count, sec, height, 'коммутационные шкафы']
+            database_open(name_prode, stack_info, base_inf)
 
     if (name_prode=='Сетевые хранилища'):
-        count_hdd, max, speed, ports=' '*4
+        count_hdd, max, ports=' '*3
         for i in range(len(connection_type)):
             match connection_type[i]:
                 case('Количество отсеков для HDD'):
@@ -270,37 +282,34 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                 case('Поддержка HDD большого объема'):
                     max=connection_type[i+1]
                     max=max.split(' ')[1]
-                case('Скорость передачи данных'):
-                    speed=connection_type[i+1]
-                    if (speed=='10/100/1000 Мбит/с'):
-                        speed='1'
-                    else:
-                        speed=speed.split(' ')[2]
-                        if (speed=='10/100/1000'):
-                            speed='1'
                 case('Количество портов RJ-45'):
                     ports=connection_type[i+1]              
         if (max!=' '):
-            stack_info=[count_hdd, max, ports, speed]
+            stack_info=[count_hdd, max, ports]
             database_open(name_prode, stack_info, base_inf)
 
 driver = webdriver.Chrome()
 
-wait = WebDriverWait(driver, 100)
+wait = WebDriverWait(driver, 10)
 
-# driver.get('https://www.citilink.ru/catalog/wi-fi-routery-marshrutizatory/')
-# sniff_info_citilink('Wi-Fi роутеры')
+try:
 
-driver.get('https://www.citilink.ru/catalog/tochki-dostupa/')
-sniff_info_citilink('Точки доступа')
+    driver.get('https://www.citilink.ru/catalog/wi-fi-routery-marshrutizatory/')
+    sniff_info_citilink('Wi-Fi роутеры')
 
-# driver.get('https://www.citilink.ru/catalog/shkafy-servernye/')
-# sniff_info_citilink('Коммутационные шкафы')
+    driver.get('https://www.citilink.ru/catalog/tochki-dostupa/')
+    sniff_info_citilink('Точки доступа')
 
-# driver.get('https://www.citilink.ru/catalog/shkafy-servernye/?p=2')
-# sniff_info_citilink('Серверные шкафы')
+    driver.get('https://www.citilink.ru/catalog/shkafy-servernye/')
+    sniff_info_citilink('Коммутационные шкафы')
 
-# driver.get('https://www.citilink.ru/catalog/setevye-hranilischa-nas')
-# sniff_info_citilink('Сетевые хранилища')
+    driver.get('https://www.citilink.ru/catalog/shkafy-servernye/?p=2')
+    sniff_info_citilink('Серверные шкафы')
 
-driver.quit()
+    driver.get('https://www.citilink.ru/catalog/setevye-hranilischa-nas')
+    sniff_info_citilink('Сетевые хранилища')
+
+    driver.quit()
+
+except WebDriverException:
+    driver.quit()

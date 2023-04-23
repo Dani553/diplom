@@ -1,20 +1,120 @@
 <!DOCTYPE html>
 <html>
-<head>
- <title>Registration Page</title>
-</head>
-<body>
- {% if error %}
-  <p>{{ error }}</p>
- {% endif %}
- <form method="POST" action="{{ url_for('register') }}">
-  <label for="username">Username:</label>
-  <input type="text" id="username" name="username"><br><br>
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password"><br><br>
-  <input type="submit" value="Register">
- </form>
- <br>
- <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+  </head>
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f2f2f2;
+  font-family: sans-serif;
+}
+
+.form-container {
+  background-color: #fff;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+label {
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"] {
+  border: none;
+  border-radius: 3px;
+  padding: 10px;
+  font-size: 16px;
+  background-color: #f2f2f2;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  background-color: #e5e5e5;
+}
+
+.btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #43A047;
+}
+
+.bottom-text {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.bottom-text a {
+  color: #4CAF50;
+  text-decoration: none;
+}
+
+.error-message {
+  color: #e74c3c;
+  background-color: #f2dede;
+  border: 1px solid #e74;
+  text-align: center;
+}
+  </style>
+  <body>
+    <div class="form-container">
+      <form method="POST" action="{{ url_for('register') }}" class="form">
+        <div class="form-group">
+          <label for="username">Логин:</label>
+          <input type="text" id="username" name="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Пароль:</label>
+          <input type="password" id="password" name="password">
+        </div>
+        <div class="form-group">
+          <input type="submit" value="Зарегистрироваться" class="btn">
+        </div>
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+      </form>
+      <div class="bottom-text">
+        <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Тогда зайдите в аккаунт</a></p>
+      </div>
+    </div>
+  </body>
 </html>
