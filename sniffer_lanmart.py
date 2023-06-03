@@ -5,12 +5,15 @@ import time
 import psycopg2
 import os
 from dotenv import load_dotenv
-
+# Функция для подключения к БД PostgreSQL
 def database_open(name_prod, stack_info, base_inf):
     load_dotenv()
     db_password = os.getenv("DB_PASSWORD")
-    conn = psycopg2.connect(dbname='postgres', user='postgres', 
-                        password=db_password, host='localhost')
+    db_host = 'localhost'
+    db_name = 'postgres'
+    db_user = 'postgres'
+
+    conn = psycopg2.connect(host=db_host, database=db_name, user=db_user, password=db_password)
     cursor = conn.cursor()
     
     database_input(name_prod, cursor, stack_info, base_inf)
@@ -18,7 +21,7 @@ def database_open(name_prod, stack_info, base_inf):
     conn.commit()
     cursor.close()
     conn.close()
-
+# Функция для вставки новых данных в таблицы соответствующих сетевых оборудований
 def database_input(name_prod, cursor, stack, base_inf):
     match name_prod:
         case('Беспроводные маршрутизаторы'):
@@ -34,17 +37,18 @@ def database_input(name_prod, cursor, stack, base_inf):
             base_inf+=id
             cursor.execute("""INSERT INTO "Маршрутизаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Коммутаторы'):
-            cursor.execute("""INSERT INTO "Характеристики коммутаторов" ("Порты WAN/LAN", "Уровень", "Пропускная способность(Скорость)", "Вид", "Размещение") values (%s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""INSERT INTO "Характеристики коммутаторов" ("Порты WAN/LAN", "Уровень", "Пропускная способность(Скорость)", "Размещение") values (%s, %s, %s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики коммутаторов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
             cursor.execute("""INSERT INTO "Коммутаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
 
-
+# Поиск на странице, содержащей сетевые оборудования основной информации: "Цена", "Название", "Ссылка"
 def sniff_info_lanmart(name_prode):
     products = driver.find_elements(By.CSS_SELECTOR, 'div.item-area')[:10]
 
     for product in products:
+# Поиск по CSS_SELECTOR элементов для получения данных о сетевом оборудовании
         name_att = product.find_elements(By.CSS_SELECTOR, 'div.details-area')
         name_prod = product.find_elements(By.CSS_SELECTOR, 'h2.product-name')[0]
         name=name_prod.text
@@ -54,16 +58,16 @@ def sniff_info_lanmart(name_prode):
         price=price.text
 
         base_inf=[name, link, price]
-
+# Открытие новой вкладки по полученной из CSS_SELECTOR ссылке
         driver.execute_script("window.open('{}', '_blank')".format(link))
 
-        # Switch to the new tab
+# Переход на новую вкладку
         driver.switch_to.window(driver.window_handles[-1])
-
+# Установка времени сна, для того, чтобы страница успела прогрузиться, до того как в ней будет происходить поиск
         time.sleep(4)
 
         dop_inf=driver.find_elements(By.CSS_SELECTOR, 'div.product-tabs.horizontal')[0]
-
+# Нажатие на найденную по надписи кнопку, для перехода к характеристикам
         expand_all_button = dop_inf.find_elements(By.LINK_TEXT, 'ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ')[0]
         expand_all_button.click()
         expand_all_button.click()
@@ -76,7 +80,7 @@ def sniff_info_lanmart(name_prode):
         
         driver.close()
         driver.switch_to.window(driver.window_handles[0])
-
+# Поиск на странице выбранного сетевого оборудования информации о характеристиках
 def sniff_dop_charact_lanmart(name_prode, connection_type, base_inf):
     count_set, stand, speed, ipv6=' '*4
     if (name_prode=='Беспроводные маршрутизаторы'):
@@ -122,8 +126,9 @@ def sniff_dop_charact_lanmart(name_prode, connection_type, base_inf):
                     if(ipv6!='есть'):
                         ipv6='нет'
 
-        stack=[count_set, stand, speed, ipv6]
-        database_open(name_prode, stack, base_inf)
+        if count_set!=' ':
+            stack=[int(count_set), stand, speed, ipv6]
+            database_open(name_prode, stack, base_inf)
 
     elif (name_prode=='Маршрутизаторы'):
             ports, ipv6=' '*2
@@ -150,8 +155,9 @@ def sniff_dop_charact_lanmart(name_prode, connection_type, base_inf):
                 except IndexError:
                     pass
 
-            stack=[ports, ipv6]
-            database_open(name_prode, stack, base_inf)
+            if ports!=' ':
+                stack=[int(ports), ipv6]
+                database_open(name_prode, stack, base_inf)
     elif (name_prode=='Коммутаторы'):
             ports, speed, level, size=' '*4
             for i in range(len(connection_type)):
@@ -172,32 +178,28 @@ def sniff_dop_charact_lanmart(name_prode, connection_type, base_inf):
                                     speed='1 Гб'
                             case('Коммутатор уровня'):
                                 level=charact_val
-                            case('Установка в стойку'):
-                                if(len(charact_val.split(' '))>1):
-                                    size=charact_val.split(' ')[2]
-                                    size=size.replace('U', '')
-                                else:
-                                    size='нет'
                             case('Исполнение'):
                                 isp=charact_val
 
                 except IndexError:
                     pass
-            if (ports):
-                stack=[ports, level, speed, isp, size]
+            if (ports!=' '):
+                stack=[int(ports), level, speed, isp]
                 database_open(name_prode, stack, base_inf)
 try:
+# Создание webdriver используя Google Chrome
     driver = webdriver.Chrome()
 
-    # driver.get('https://www.lanmart.ru/besprovodnye-marshrutizatory-4.html?limit=all')
-    # sniff_info_lanmart('Беспроводные маршрутизаторы')
+# Получение страницы, содержащей Wi-Fi роутеры и обращение к функции поиска основной информации о выбранном сетевом оборудовании
+    driver.get('https://www.lanmart.ru/besprovodnye-marshrutizatory-4.html?limit=all')
+    sniff_info_lanmart('Беспроводные маршрутизаторы')
 
-    # driver.get('https://www.lanmart.ru/marshrutizatory.html')
-    # sniff_info_lanmart('Маршрутизаторы')
+    driver.get('https://www.lanmart.ru/marshrutizatory.html')
+    sniff_info_lanmart('Маршрутизаторы')
 
     driver.get('https://www.lanmart.ru/kommutatory-tp-link.html')
     sniff_info_lanmart('Коммутаторы')
-
+# Закрытие webdriver
     driver.quit()
 
 except WebDriverException:

@@ -3,13 +3,12 @@
 <head>
  <title>Вход в аккаунт</title>
 </head>
-<style>
+<style> 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
 body {
   display: flex;
   justify-content: center;
@@ -18,7 +17,6 @@ body {
   background-color: #f2f2f2;
   font-family: sans-serif;
 }
-
 .form-container {
   background-color: #fff;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -27,19 +25,16 @@ body {
   max-width: 400px;
   width: 100%;
 }
-
 .form-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
 }
-
 label {
   margin-bottom: 5px;
   font-size: 14px;
   font-weight: bold;
 }
-
 input[type="text"],
 input[type="password"] {
   border: none;
@@ -52,7 +47,7 @@ input[type="password"] {
 
 input[type="text"]:focus,
 input[type="password"]:focus {
-  background-color: #e5e5e5;
+  background-color: #b6f5bb;
 }
 
 .btn {
@@ -91,6 +86,7 @@ input[type="password"]:focus {
 }
 </style>
 <body>
+  <!-- Создание формы для получения данных из полей username и password и обращение к обработчику маршрутов 'login' -->
  <form method="POST" action="{{ url_for('login') }}" class="form-container">
   <div class="form-group">
     <label for="username">Логин:</label>
@@ -101,9 +97,11 @@ input[type="password"]:focus {
     <input type="password" id="password" name="password">
   </div>
   <input type="submit" value="Войти" class="btn">
+<!-- Вывод ошибки на странице входа -->
   {% if error %}
   <div class="error-message">{{ error }}</div>
   {% endif %}
+<!-- Вывод ссылки на страницу регистрации -->
  <p class="bottom-text">Не зарегистрированы? <a href="{{ url_for('register') }}">Зарегистрируйтесь здесь!</a></p>
 </body>
 </html>

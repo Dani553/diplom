@@ -7,12 +7,16 @@ import time
 import psycopg2
 import os
 from dotenv import load_dotenv
+from selenium.webdriver.chrome.options import Options
 
 def database_open(name_prod, stack_info, base_inf):
     load_dotenv()
     db_password = os.getenv("DB_PASSWORD")
-    conn = psycopg2.connect(dbname='postgres', user='postgres', 
-                        password=db_password, host='localhost')
+    db_host = 'localhost'
+    db_name = 'postgres'
+    db_user = 'postgres'
+
+    conn = psycopg2.connect(host=db_host, database=db_name, user=db_user, password=db_password)
     cursor = conn.cursor()
     
     database_input(name_prod, cursor, stack_info, base_inf)
@@ -40,7 +44,7 @@ def database_input(name_prod, cursor, stack, base_inf):
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики шкафов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO "Характеристики шкафов" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Шкафы и стойки" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Серверные шкафы'):
             cursor.execute("""INSERT INTO "Характеристики шкафов" ("Установка", "Число секций", "Защита", "Высота", "Тип шкафа") values (%s, %s, %s, %s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики шкафов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
@@ -67,8 +71,6 @@ def sniff_info_citilink(name_prod):
 
     if (name_prod=='Сетевые хранилища'):
         products = driver.find_elements(By.CSS_SELECTOR, 'a.app-catalog-9gnskf.e1259i3g0')[:10]
-    elif (name_prod=='Коммутаторы'):
-        products = driver.find_elements(By.CSS_SELECTOR, 'div.app-catalog-l9pqdy.e1btxpey0')[:10]
     else:
         products = driver.find_elements(By.CSS_SELECTOR, 'a.app-catalog-fjtfe3.e1lhaibo0')[:10]
 
@@ -208,9 +210,11 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                         stand4='-'
         if (wan!=' '):
             wan_lan=int(wan)+int(lan)
-            wan_lan=str(wan_lan)
         else:
-            wan_lan=lan
+            if lan!=' ':
+                wan_lan=int(lan)
+            else:
+                wan_lan=0
         if (stand==' '):
             if(stand1==' '):
                 stand=stand2+' '+stand3+' '+stand4
@@ -244,8 +248,17 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                     height=(connection_type[i+1]).split('x')
                     height=height[1]           
         if (count!=' '):
-            stack_info=[razm, count, sec, height, 'cерверные шкафы']
-            database_open(name_prode, stack_info, base_inf)
+            if height!=' ':
+                if len(height.split(" "))>1:
+                    stack_info=[razm, int(count), sec, int(height[0]), 'cерверные шкафы']
+                    database_open(name_prode, stack_info, base_inf)
+                else:
+                    stack_info=[razm, int(count), sec, int(height), 'cерверные шкафы']
+                    database_open(name_prode, stack_info, base_inf)
+            else:
+                height=0
+                stack_info=[razm, int(count), sec, int(height), 'cерверные шкафы']
+                database_open(name_prode, stack_info, base_inf)
 
     if (name_prode=='Коммутационные шкафы'):
         razm, height, sec, count=' '*4
@@ -267,8 +280,13 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                         height=height[1]
 
         if (count!=' '):
-            stack_info=[razm, count, sec, height, 'коммутационные шкафы']
-            database_open(name_prode, stack_info, base_inf)
+            if (height!=' '):
+                stack_info=[razm, int(count), sec, int(height), 'коммутационные шкафы']
+                database_open(name_prode, stack_info, base_inf)
+            else:
+                height=0
+                stack_info=[razm, int(count), sec, height, 'коммутационные шкафы']
+                database_open(name_prode, stack_info, base_inf)
 
     if (name_prode=='Сетевые хранилища'):
         count_hdd, max, ports=' '*3
@@ -285,11 +303,28 @@ def prod_inform_citilink(name_prode, connection_type, base_inf):
                 case('Количество портов RJ-45'):
                     ports=connection_type[i+1]              
         if (max!=' '):
-            stack_info=[count_hdd, max, ports]
-            database_open(name_prode, stack_info, base_inf)
+            if count_hdd!=' ':
+                if ports!=' ':
+                    stack_info=[int(count_hdd), int(max), int(ports)]
+                    database_open(name_prode, stack_info, base_inf)
+                else:
+                    ports=0
+                    stack_info=[int(count_hdd), int(max), int(ports)]
+                    database_open(name_prode, stack_info, base_inf)
+            else:
+                count_hdd=0
+                if ports!=' ':
+                    stack_info=[int(count_hdd), int(max), int(ports)]
+                    database_open(name_prode, stack_info, base_inf)
+                else:
+                    ports=0
+                    stack_info=[int(count_hdd), int(max), int(ports)]
+                    database_open(name_prode, stack_info, base_inf)
 
-driver = webdriver.Chrome()
-
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--window-size=1920x1080")
+driver = webdriver.Chrome(chrome_options=chrome_options)
 wait = WebDriverWait(driver, 10)
 
 try:

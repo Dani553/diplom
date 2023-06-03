@@ -1,22 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
- <title>Конфигуратор сетевого оборудования</title>
+ <title>Агрегатор сетевого оборудования</title>
 </head>
+<style>
+  body {
+  font-family: Arial, sans-serif;
+  background-color: #f2f2f2; }
+h1, h2 {
+  text-align: center; }
+form {
+  margin: auto;
+  width: 80%;
+  padding: 20px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  text-align: center; }
+form > div {
+  margin-bottom: 10px; }
+label {
+  display: inline-block;
+  width: 200px; }
+h1 {
+  margin-top: 0;
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px; }
+h2 {
+  background-color: #ddd;
+  color: #333;
+  padding: 10px;
+  margin-top: 20px;}
+input[type="text"], select, input[type="number"] {
+  padding: 5px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  width: 61%;
+  box-sizing: border-box;
+  font-size: 16px;
+  margin-left: 10px;}
+
+input[type="submit"], button[type="submit"] {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;}
+input[type="submit"]:hover, button[type="submit"]:hover { background-color: #008CBA; }
+.error-message {
+    color: #e74c3c;
+  background-color: #f2dede;
+  border: 1px solid #e74;
+  margin-top: 20px;
+  text-align: center;}
+form > div:last-child {
+  text-align: center; }
+select {
+  width: 61%;
+  margin-left: 10px; }
+table {
+  border-collapse: collapse;
+  margin: 20px auto;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  table-layout: fixed;
+  width: 91%; }
+th, td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  word-wrap: break-word;
+  hyphens: manual; }
+th {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold; }
+a { color: #4CAF50; }
+a:hover { text-decoration: underline; }
+span {
+  display: block;
+  text-align: center;
+  padding-left: 170px;
+  margin-top: 1px;}
+p { text-align: center; }
+  </style>
+  <script>
+    function checkFlag(elementId){
+      var flagCheckbox=document.getElementById(elementId);
+      return flagCheckbox.checked;
+    }
+  </script>
 <body>
- <h1>Конфигуратор сетевого оборудования</h1>
-<form method="POST" action="{{ url_for('logout')}}">
+ <h1>Агрегатор сетевого оборудования</h1>
+ <!-- Создание формы для обработки кнопки для выхода из сессии -->
+ <div style="text-align: center;">
+<form style="display: inline;" method="POST" class="buttons" action="{{ url_for('logout')}}">
  <button type="submit">Выйти из аккаунта</button>
 </form>
-<form method="POST" action="{{ url_for('korzina')}}">
+<!-- Создание формы для обработки кнопки для вывода списка последних подходящих записей -->
+<form style="display: inline;" method="POST" class="buttons" action="{{ url_for('korzina')}}">
   <button type="submit">Вывести предыдущие выбранные сетевые оборудования</button>
  </form>
- <form id="myform" method="POST" action="{{ url_for('submit') }}">
-
+ </div>
+ <!-- Создание формы для кнопки, реализующей функцию поиска и вывода сетевого оборудования по заданным пользователем критериям -->
+ <form id="myform" style="margin-top: 40px;" method="POST" action="{{ url_for('submit') }}">
+<!-- Создание объекта, который выводит ошибку -->
+  {% if error %}
+  <div class="error-message">{{ error }}</div>
+  {% endif %}
+<!-- Вывод полей для ввода характеристик и поиска подходящих коммутаторов -->
   <h2>Коммутаторы</h2>
   <div><label for="switch_field1"> Количество WAN/LAN портов:</label>
-  <input type="text" name="switch_field1" id="switch_field1">
-  <span id="field1_error" class="error"></span></div>
+  <input type="number" name="switch_field1" id="switch_field1"></div>
   <div><label for="switch_listbox1">Выберите уровень коммутатора:</label>
   <select name="switch_listbox1" id="switch_listbox1">
     <option value=""></option>
@@ -45,11 +143,12 @@
       <option value="{{ row[0] }}">{{ row[0] }}</option>
     {% endfor %}
   </select></div>
-
+  <label style="margin-top: 20px; margin-bottom: 20px;" for="switch_flag">Показать</label>
+  <input type="checkbox" name="switch_flag" id="switch_flag">
+<!-- Вывод полей для ввода характеристик и поиска подходящих маршрутизаторов -->
   <h2>Маршрутизаторы</h2>
   <div><label for="router_field1"> Количество WAN/LAN портов:</label>
-  <input type="text" name="router_field1" id="router_field1">
-  <span id="field2_error" class="error"></span></div>
+  <input type="number" name="router_field1" id="router_field1"></div>
   <div><label for="router_listbox">Поддержка IPv6:</label>
   <select name="router_listbox" id="router_listbox">
     <option value=""></option>
@@ -57,18 +156,20 @@
       <option value="{{ row[0] }}">{{ row[0] }}</option>
     {% endfor %}
   </select></div>
-
+  <label style="margin-top: 20px; margin-bottom: 20px;" for="marsh_flag">Показать</label>
+  <input type="checkbox" name="marsh_flag" id="marsh_flag">
+<!-- Вывод полей для ввода характеристик и поиска подходящих Wi-Fi роутеров -->
   <h2>Wi-Fi роутеры</h2>
   <div><label for="wifi_router_field1"> Количество WAN/LAN портов:</label>
-  <input type="text" name="wifi_router_field1" id="wifi_router_field1">
+  <input type="number" name="wifi_router_field1" id="wifi_router_field1"></div>
   <div><label for="wifi_router_listbox1">Стандарт Wi-Fi:</label>
     <select name="wifi_router_listbox1" id="wifi_router_listbox1">
       <option value=""></option>
       {% for row in row13 %}
         <option value="{{ row[0] }}">{{ row[0] }}</option>
       {% endfor %}
-    </select>
-    <span id="list1_error" class="error"></span></div>
+    </select></div>
+    <span style="margin-bottom: 20px; margin-top: 5px;" id="list1_error" class="error"></span>
     <div><label for="wifi_router_listbox2">Скорость передачи данных:</label>
       <select name="wifi_router_listbox2" id="wifi_router_listbox2">
         <option value=""></option>
@@ -83,12 +184,14 @@
       <option value="{{ row[0] }}">{{ row[0] }}</option>
     {% endfor %}
   </select></div>
-
+  <label style="margin-top: 20px; margin-bottom: 20px;" for="wifi_router_flag">Показать</label>
+  <input type="checkbox" name="wifi_router_flag" id="wifi_router_flag">
+<!-- Вывод полей для ввода характеристик и поиска подходящих серверных платформ -->
   <h2>Серверные платформы</h2>
   <div><label for="server_field1"> Количество WAN/LAN портов:</label>
-  <input type="text" name="server_field1" id="server_field1">
+  <input type="number" name="server_field1" id="server_field1"></div>
   <div><label for="server_field2">Количество USB портов:</label>
-  <input type="text" name="server_field2" id="server_field2"></div>
+  <input type="number" name="server_field2" id="server_field2"></div>
   <div><label for="server_listbox1">Выберите процессор:</label>
     <select name="server_listbox1" id="server_listbox1">
       <option value=""></option>
@@ -97,22 +200,23 @@
       {% endfor %}
     </select></div>
   <div><label for="server_field3">Количество процессоров:</label>
-  <input type="text" name="server_field3" id="server_field3"></div>
+  <input type="number" name="server_field3" id="server_field3"></div>
   <div><label for="server_field4">Количество Тб памяти:</label>
-  <input type="text" name="server_field4" id="server_field4">
-  <span id="field3_error" class="error"></span></div>
-
+  <input type="number" name="server_field4" id="server_field4"></div>
+  <label style="margin-top: 20px; margin-bottom: 20px;" for="server_flag">Показать</label>
+  <input type="checkbox" name="server_flag" id="server_flag">
+<!-- Вывод полей для ввода характеристик и поиска подходящих точек доступа Wi-Fi -->
   <h2>Точки доступа</h2>
   <div><label for="access_point_field1"> Количество WAN/LAN портов:</label>
-  <input type="text" name="access_point_field1" id="access_point_field1">
+  <input type="number" name="access_point_field1" id="access_point_field1"></div>
   <div><label for="access_point_listbox1">Стандарт Wi-Fi:</label>
     <select name="access_point_listbox1" id="access_point_listbox1">
       <option value=""></option>
       {% for row in row6 %}
         <option value="{{ row[0] }}">{{ row[0] }}</option>
       {% endfor %}
-    </select>
-    <span id="list2_error" class="error"></span></div>
+    </select></div>
+    <span style="margin-bottom: 20px; margin-top: 5px;" id="list2_error" class="error"></span>
     <div><label for="access_point_listbox2">Размещение:</label>
       <select name="access_point_listbox2" id="access_point_listbox2">
         <option value=""></option>
@@ -125,9 +229,10 @@
     <option value=""></option>
     {% for row in row8 %}
       <option value="{{ row[0] }}">{{ row[0] }}</option>
-    {% endfor %}
-  </select></div>
-
+    {% endfor %}</select></div>
+  <label style="margin-top: 20px; margin-bottom: 20px;" for="access_point_flag">Показать</label>
+  <input type="checkbox" name="access_point_flag" id="access_point_flag">
+<!-- Вывод полей для ввода характеристик и поиска подходящих коммутационных шкафов -->
   <h2>Шкафы и стойки</h2>
   <div><label for="cabinet_listbox1">Выберите установку:</label>
     <select name="cabinet_listbox1" id="cabinet_listbox1">
@@ -137,8 +242,7 @@
       {% endfor %}
     </select></div>
   <div><label for="cabinet_field1"> Количество секций:</label>
-  <input type="text" name="cabinet_field1" id="cabinet_field1">
-  <span id="field4_error" class="error"></span></div>
+  <input type="number" name="cabinet_field1" id="cabinet_field1"></div>
   <div><label for="cabinet_listbox2">Выберите защиту:</label>
       <select name="cabinet_listbox2" id="cabinet_listbox2">
         <option value=""></option>
@@ -147,7 +251,7 @@
         {% endfor %}
       </select></div>
   <div><label for="cabinet_field2"> Введите высоту:</label>
-  <input type="text" name="cabinet_field2" id="cabinet_field2">
+  <input type="number" name="cabinet_field2" id="cabinet_field2"></div>
   <div><label for="cabinet_listbox3">Выберите тип шкафа:</label>
   <select name="cabinet_listbox3" id="cabinet_listbox3">
     <option value=""></option>
@@ -155,203 +259,788 @@
       <option value="{{ row[0] }}">{{ row[0] }}</option>
     {% endfor %}
   </select></div>
-
+  <label style="margin-top: 20px; margin-bottom: 20px;" for="cabinet_flag">Показать</label>
+  <input type="checkbox" name="cabinet_flag" id="cabinet_flag">
+<!-- Вывод полей для ввода характеристик и поиска подходящих сетевых хранилищ -->
   <h2>Сетевые хранилища</h2>
   <div><label for="network_storage_field1"> Количество отсеков памяти:</label>
-  <input type="text" name="network_storage_field1" id="network_storage_field1">
+  <input type="number" name="network_storage_field1" id="network_storage_field1"></div>
   <div><label for="network_storage_field2"> Максимально поддерживаемый объем памяти:</label>
-  <input type="text" name="network_storage_field2" id="network_storage_field2">
-  <span id="field5_error" class="error"></span></div>
+  <input type="number" name="network_storage_field2" id="network_storage_field2"></div>
   <div><label for="network_storage_field3"> Количество портов Ethernet:</label>
-  <input type="text" name="network_storage_field3" id="network_storage_field3">
-
-  <div><input type="submit" value="Выбрать"></div>
+  <input type="number" name="network_storage_field3" id="network_storage_field3"></div>
+  <label style="margin-top: 20px; margin-bottom: 20px;" for="network_storage_flag">Показать</label>
+  <input type="checkbox" name="network_storage_flag" id="network_storage_flag">
+<!-- Создание кнопки для выполнения действия формы -->
+  <div><input style="margin-top: 20px;" type="submit" value="Выбрать"></div>
  </form>
 
- <script>
-  document.getElementById("myform").addEventListener("submit", function(event) {
-
-    var field1 = document.getElementById("switch_field1").value;
-    var field2 = document.getElementById("router_field1").value;
-    let list1 = document.getElementById("wifi_router_listbox1")
-    var field3 = document.getElementById("server_field4").value
-    var list2 = document.getElementById("access_point_listbox1")
-    var field4 = document.getElementById("cabinet_field1").value
-    var field5 = document.getElementById("network_storage_field2").value
-    if (field1 === "" || isNaN(field1)) {
-      event.preventDefault();
-      document.getElementById("field1_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
-    } else {
-      document.getElementById("field1_error").innerHTML = "";
-    }
-    if (field2 === "" || isNaN(field2)) {
-      event.preventDefault();
-      document.getElementById("field2_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
-    } else {
-      document.getElementById("field2_error").innerHTML = "";
-    }
-    if (list1.children.length == 0) {
-        document.getElementById("list1_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
-    } else if (!list1.value) {
-      document.getElementById("list1_error").innerHTML = "Пожалуйста введите данные в обязательное поле!"
-      } else {
-        document.getElementById("list1_error").innerHTML = "";
-      }
-    if (field3 === "" || isNaN(field3)) {
-      event.preventDefault();
-      document.getElementById("field3_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
-    } else {
-      document.getElementById("field3_error").innerHTML = "";
-    }
-    if (field4 === "" || isNaN(field4)) {
-      event.preventDefault();
-      document.getElementById("field4_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
-    } else {
-      document.getElementById("field4_error").innerHTML = "";
-    }
-    if (list2.value == "") {
-        document.getElementById("list2_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
-      } else if (!list2.value) {
-      document.getElementById("list2_error").innerHTML = "Пожалуйста введите данные в обязательное поле!"
-      } else {
-        document.getElementById("list2_error").innerHTML = "";
-      }
-    if (field5 === "" || isNaN(field5)) {
-      event.preventDefault();
-      document.getElementById("field5_error").innerHTML = "Пожалуйста введите данные в обязательное поле!";
-    } else {
-      document.getElementById("field5_error").innerHTML = "";
-    }
-  });
- </script>
-
+<!-- Вывод таблицы с подходящими коммутаторами -->
  {% if switch_results %}
+ {% if switch_results!= ' ' %}
+ <form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
   <h2>Подходящие Коммутаторы</h2>
-  <ul>
-   {% for result in switch_results %}
-   <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
-   {% endfor %}
-  </ul>
- {% endif %}
+  <table>
+    <thead>
+      <tr>
+        <th>Сравнить</th>
+        <th>Название</th>
+        <th>Ссылка</th>
+        <th>Цена</th>
+        <th>Порты WAN/LAN</th>
+        <th>Уровень</th>
+        <th>Пропускная способность(Скорость)</th>
+        <th>Вид</th>
+        <th>Размещение</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in switch_results %}
+      <tr>
+        <td><input type="checkbox" name="selected_rows_com" id="selected_rows_com" value="{{ result[0] }}"></td>
+        <td>{{ result[1] }}</td>
+        <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+        <td>{{ result[3] }}</td>
+        <td>{{ result[4] }}</td>
+        <td>{{ result[5] }}</td>
+        <td>{{ result[6] }}</td>
+        <td>{{ result[7] }}</td>
+        <td>{{ result[8] }}</td>
+        {% if not loop.last %} {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody> </table>
+    <input style="margin-top: 20px;" type="submit" value="Выбрать">
+  </form>
+    {% endif %} {% endif %} 
+    {% if list_found[0]==1 %}
+    <h2>Подходящие Коммутаторы</h2>
+    <p>Результатов подходящих под ваши критерии не найдено.</p>
+    {% endif %} 
 
  {% if router_results %}
+ {% if router_results!=' ' %}
+ <form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
  <h2>Подходящие Маршрутизаторы</h2>
- <ul>
-  {% for result in router_results %}
-  <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
-  {% endfor %}
- </ul>
+ <table>
+   <thead>
+     <tr>
+       <th>Сравнить</th>
+       <th>Название</th>
+       <th>Ссылка</th>
+       <th>Цена</th>
+       <th>Порты WAN/LAN</th>
+       <th>Поддержка IPv6</th>
+     </tr>
+   </thead>
+   <tbody>
+     {% for result in router_results %}
+     <tr>
+       <td><input type="checkbox" name="selected_rows_marsh" id="selected_rows_marsh" value="{{ result[0] }}"></td>
+       <td>{{ result[1] }}</td>
+       <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+       <td>{{ result[3] }}</td>
+       <td>{{ result[4] }}</td>
+       <td>{{ result[5] }}</td>
+       {% if not loop.last %} {% endif %}
+     </tr>
+     {% endfor %}
+   </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
+</form>
 {% endif %}
+{% endif %}
+{% if list_found[1]==1 %}
+<h2>Подходящие Маршрутизаторы</h2>
+<p>Результатов подходящих под ваши критерии не найдено.</p>
+{% endif %} 
 
 {% if wifi_router_results %}
+{% if wifi_router_results!=' ' %}
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
 <h2>Подходящие Wi-Fi роутеры</h2>
-<ul>
- {% for result in wifi_router_results %}
- <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<table>
+  <thead>
+    <tr>
+      <th>Сравнить</th>
+      <th>Название</th>
+      <th>Ссылка</th>
+      <th>Цена</th>
+      <th>Порты WAN/LAN</th>
+      <th>Стандарты Wi-Fi</th>
+      <th>Скорость передачи</th>
+      <th>Поддержка IPv6</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in wifi_router_results %}
+    <tr>
+      <td><input type="checkbox" name="selected_rows_wifi_router" id="selected_rows_wifi_router" value="{{ result[0] }}"></td>
+      <td>{{ result[1] }}</td>
+      <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+      <td>{{ result[3] }}</td>
+      <td>{{ result[4] }}</td>
+      <td>{{ result[5] }}</td>
+      <td>{{ result[6] }}</td>
+      <td>{{ result[7] }}</td>
+      {% if not loop.last %} {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
+</form>
 {% endif %}
+{% endif %}
+{% if list_found[2]==1 %}
+<h2>Подходящие Wi-Fi роутеры</h2>
+<p>Результатов подходящих под ваши критерии не найдено.</p>
+{% endif %} 
 
 {% if server_results %}
+{% if server_results!=' ' %}
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
 <h2>Подходящие Сервера</h2>
-<ul>
- {% for result in server_results %}
- <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<table>
+  <thead>
+    <tr>
+      <th>Сравнить</th>
+      <th>Название</th>
+      <th>Ссылка</th>
+      <th>Цена</th>
+      <th>Порты WAN/LAN</th>
+      <th>Порты USB</th>
+      <th>Количество процессоров</th>
+      <th>Дисковая корзина</th>
+      <th>Процессор</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in server_results %}
+    <tr>
+      <td><input type="checkbox" name="selected_rows_server" id="selected_rows_server" value="{{ result[0] }}"></td>
+      <td>{{ result[1] }}</td>
+      <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+      <td>{{ result[3] }}</td>
+      <td>{{ result[4] }}</td>
+      <td>{{ result[5] }}</td>
+      <td>{{ result[6] }}</td>
+      <td>{{ result[7] }}</td>
+      <td>{{ result[8] }}</td>
+      {% if not loop.last %} {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
+</form>
 {% endif %}
+{% endif %}
+{% if list_found[3]==1 %}
+<h2>Подходящие Серверные платформы</h2>
+<p>Результатов подходящих под ваши критерии не найдено.</p>
+{% endif %} 
 
 {% if access_point_results %}
-<h2>Подходящие Точки доступа Wi-Fi</h2>
-<ul>
- {% for result in access_point_results %}
- <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+{% if access_point_results!=' ' %}
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
+<h2>Подходящие Точки доступа</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Сравнить</th>
+      <th>Название</th>
+      <th>Ссылка</th>
+      <th>Цена</th>
+      <th>Порты WAN/LAN</th>
+      <th>Стандарты Wi-Fi</th>
+      <th>Размещение</th>
+      <th>Варианты крепления</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in access_point_results %}
+    <tr>
+      <td><input type="checkbox" name="selected_rows_access_point" id="selected_rows_access_point" value="{{ result[0] }}"></td>
+      <td>{{ result[1] }}</td>
+      <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+      <td>{{ result[3] }}</td>
+      <td>{{ result[4] }}</td>
+      <td>{{ result[5] }}</td>
+      <td>{{ result[6] }}</td>
+      <td>{{ result[7] }}</td>
+      {% if not loop.last %} {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
+</form>
 {% endif %}
+{% endif %}
+{% if list_found[4]==1 %}
+<h2>Подходящие Точки доступа Wi-Fi</h2>
+<p>Результатов подходящих под ваши критерии не найдено.</p>
+{% endif %} 
 
 {% if cabinet_results %}
+{% if cabinet_results!=' ' %}
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
 <h2>Подходящие Шкафы и стойки</h2>
-<ul>
- {% for result in cabinet_results %}
- <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<table>
+  <thead>
+    <tr>
+      <th>Сравнить</th>
+      <th style="width: 140px;">Название</th>
+      <th>Ссылка</th>
+      <th>Цена</th>
+      <th>Число секций</th>
+      <th>Высота</th>
+      <th>Установка</th>
+      <th>Защита</th>
+      <th style="width: 140px;">Тип шкафа</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in cabinet_results %}
+    <tr>
+      <td><input type="checkbox" name="selected_rows_cabinet" id="selected_rows_cabinet" value="{{ result[0] }}"></td>
+      <td style="width: 140px;">{{ result[1] }}</td>
+      <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+      <td>{{ result[3] }}</td>
+      <td>{{ result[4] }}</td>
+      <td>{{ result[5] }}</td>
+      <td>{{ result[6] }}</td>
+      <td>{{ result[7] }}</td>
+      <td style="width: 140px;">{{ result[8] }}</td>
+      {% if not loop.last %} {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
+</form>
 {% endif %}
+{% endif %}
+{% if list_found[5]==1 %}
+<h2>Подходящие Шкафы и стойки</h2>
+<p>Результатов подходящих под ваши критерии не найдено.</p>
+{% endif %} 
 
 {% if network_storage_results %}
+{% if network_storage_results!=' ' %}
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
 <h2>Подходящие Сетевые хранилища</h2>
-<ul>
- {% for result in network_storage_results %}
- <li>{{ result[1] }} <div>{{ result[3] }}</div> <div><a href="{{ result[2] }}">{{ result[2] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<table>
+  <thead>
+    <tr>
+      <th>Сравнить</th>
+      <th>Название</th>
+      <th>Ссылка</th>
+      <th>Цена</th>
+      <th>Количество отсеков</th>
+      <th>Максимально поддерживаемый объем</th>
+      <th>Количество портов Ethernet</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in network_storage_results %}
+    <tr>
+      <td><input type="checkbox" name="selected_rows_network_storage" id="selected_rows_network_storage" value="{{ result[0] }}"></td>
+      <td>{{ result[1] }}</td>
+      <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+      <td>{{ result[3] }}</td>
+      <td>{{ result[4] }}</td>
+      <td>{{ result[5] }}</td>
+      <td>{{ result[6] }}</td>
+      {% if not loop.last %} {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
+{% endif %}
+{% endif %}
+</form>
+{% if list_found[6]==1 %}
+<h2>Подходящие Сетевые хранилища</h2>
+<p>Результатов подходящих под ваши критерии не найдено.</p>
+{% endif %} 
+
+<!-- Вывод таблицы с подходившими коммутаторами -->
+{% if inform_com %}
+ <form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
+<h2>Подходившие Коммутаторы</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Сравнить</th>
+      <th>Название</th>
+      <th>Ссылка</th>
+      <th>Цена</th>
+      <th>Порты WAN/LAN</th>
+      <th>Уровень</th>
+      <th>Пропускная способность(Скорость)</th>
+      <th style="width: 140px;">Вид</th>
+      <th>Размещение</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in inform_com %}
+    <tr>
+      <td><input type="checkbox" name="selected_rows_com" id="selected_rows_com" value="{{ result[0] }}"></td>
+      <td>{{ result[1] }}</td>
+      <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+      <td>{{ result[3] }}</td>
+      <td>{{ result[4] }}</td>
+      <td>{{ result[5] }}</td>
+      <td>{{ result[6] }}</td>
+      <td style="width: 140px;">{{ result[7] }}</td>
+      <td>{{ result[8] }}</td>
+      {% if not loop.last %} {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
 {% endif %}
 
-
-
-{% if inform_com %}
-  <h2>Подходившие коммутаторы</h2>
-  <ul>
-   {% for result in inform_com %}
-   <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
+{% if inform_marsh %}
+ <form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
+<h2>Подходившие Маршрутизаторы</h2>
+<table>
+ <thead>
+   <tr>
+     <th>Сравнить</th>
+     <th>Название</th>
+     <th>Ссылка</th>
+     <th>Цена</th>
+     <th>Порты WAN/LAN</th>
+     <th>Поддержка IPv6</th>
+   </tr>
+ </thead>
+ <tbody>
+   {% for result in inform_marsh %}
+   <tr>
+     <td><input type="checkbox" name="selected_rows_marsh" id="selected_rows_marsh" value="{{ result[0] }}"></td>
+     <td>{{ result[1] }}</td>
+     <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+     <td>{{ result[3] }}</td>
+     <td>{{ result[4] }}</td>
+     <td>{{ result[5] }}</td>
+     {% if not loop.last %} {% endif %}
+   </tr>
    {% endfor %}
-  </ul>
- {% endif %}
-
- {% if inform_marsh %}
- <h2>Подходившие маршрутизаторы</h2>
- <ul>
-  {% for result in inform_marsh %}
-  <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
-  {% endfor %}
- </ul>
+ </tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
 {% endif %}
 
 {% if inform_router %}
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
 <h2>Подходившие Wi-Fi роутеры</h2>
-<ul>
- {% for result in inform_router %}
- <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<table>
+<thead>
+  <tr>
+    <th>Сравнить</th>
+    <th>Название</th>
+    <th>Ссылка</th>
+    <th>Цена</th>
+    <th>Порты WAN/LAN</th>
+    <th>Стандарты Wi-Fi</th>
+    <th>Скорость передачи</th>
+    <th>Поддержка IPv6</th>
+  </tr>
+</thead>
+<tbody>
+  {% for result in inform_router %}
+  <tr>
+    <td><input type="checkbox" name="selected_rows_wifi_router" id="selected_rows_wifi_router" value="{{ result[0] }}"></td>
+    <td>{{ result[1] }}</td>
+    <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+    <td>{{ result[3] }}</td>
+    <td>{{ result[4] }}</td>
+    <td>{{ result[5] }}</td>
+    <td>{{ result[6] }}</td>
+    <td>{{ result[7] }}</td>
+    {% if not loop.last %} {% endif %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
 {% endif %}
 
 {% if inform_server %}
-<h2>Подходившие сервера</h2>
-<ul>
- {% for result in inform_server %}
- <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
+<h2>Подходившие Сервера</h2>
+<table>
+<thead>
+  <tr>
+    <th>Сравнить</th>
+    <th>Название</th>
+    <th>Ссылка</th>
+    <th>Цена</th>
+    <th>Порты WAN/LAN</th>
+    <th>Порты USB</th>
+    <th>Количество процессоров</th>
+    <th>Дисковая корзина</th>
+    <th>Процессор</th>
+  </tr>
+</thead>
+<tbody>
+  {% for result in inform_server %}
+  <tr>
+    <td><input type="checkbox" name="selected_rows_server" id="selected_rows_server" value="{{ result[0] }}"></td>
+    <td>{{ result[1] }}</td>
+    <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+    <td>{{ result[3] }}</td>
+    <td>{{ result[4] }}</td>
+    <td>{{ result[5] }}</td>
+    <td>{{ result[6] }}</td>
+    <td>{{ result[7] }}</td>
+    <td>{{ result[8] }}</td>
+    {% if not loop.last %} {% endif %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
 {% endif %}
 
 {% if inform_toch %}
-<h2>Подходившие точки доступа Wi-Fi</h2>
-<ul>
- {% for result in inform_toch %}
- <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
+<h2>Подходившие Точки доступа</h2>
+<table>
+<thead>
+  <tr>
+    <th>Сравнить</th>
+    <th>Название</th>
+    <th>Ссылка</th>
+    <th>Цена</th>
+    <th>Порты WAN/LAN</th>
+    <th>Стандарты Wi-Fi</th>
+    <th>Размещение</th>
+    <th>Варианты крепления</th>
+  </tr>
+</thead>
+<tbody>
+  {% for result in inform_toch %}
+  <tr>
+    <td><input type="checkbox" name="selected_rows_access_point" id="selected_rows_access_point" value="{{ result[0] }}"></td>
+    <td>{{ result[1] }}</td>
+    <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+    <td>{{ result[3] }}</td>
+    <td>{{ result[4] }}</td>
+    <td>{{ result[5] }}</td>
+    <td>{{ result[6] }}</td>
+    <td>{{ result[7] }}</td>
+    {% if not loop.last %} {% endif %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
 {% endif %}
 
 {% if inform_shkaf %}
-<h2>Подходившие шкафы и стойки</h2>
-<ul>
- {% for result in inform_shkaf %}
- <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
+<h2>Подходившие Шкафы и стойки</h2>
+<table>
+<thead>
+  <tr>
+    <th>Сравнить</th>
+    <th style="width: 140px;">Название</th>
+    <th>Ссылка</th>
+    <th>Цена</th>
+    <th>Число секций</th>
+    <th>Высота</th>
+    <th>Установка</th>
+    <th>Защита</th>
+    <th style="width: 140px;">Тип шкафа</th>
+  </tr>
+</thead>
+<tbody>
+  {% for result in inform_shkaf %}
+  <tr>
+    <td><input type="checkbox" name="selected_rows_cabinet" id="selected_rows_cabinet" value="{{ result[0] }}"></td>
+    <td style="width: 140px;">{{ result[1] }}</td>
+    <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+    <td>{{ result[3] }}</td>
+    <td>{{ result[4] }}</td>
+    <td>{{ result[5] }}</td>
+    <td>{{ result[6] }}</td>
+    <td>{{ result[7] }}</td>
+    <td style="width: 140px;">{{ result[8] }}</td>
+    {% if not loop.last %} {% endif %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
 {% endif %}
 
 {% if inform_chran %}
-<h2>Подходившие сетевые хранилища</h2>
-<ul>
- {% for result in inform_chran %}
- <li>{{ result[0] }} <div>{{ result[2] }}</div> <div><a href="{{ result[1] }}">{{ result[1] }}</a></div>{% if not loop.last %} {% endif %}</li>
- {% endfor %}
-</ul>
+<form id="compare" style="margin-top: 40px;" method="POST" action="{{ url_for('compare') }}">
+<h2>Подходившие Сетевые хранилища</h2>
+<table>
+<thead>
+  <tr>
+    <th>Сравнить</th>
+    <th>Название</th>
+    <th>Ссылка</th>
+    <th>Цена</th>
+    <th>Количество отсеков</th>
+    <th>Максимально поддерживаемый объем</th>
+    <th>Количество портов Ethernet</th>
+  </tr>
+</thead>
+<tbody>
+  {% for result in inform_chran %}
+  <tr>
+    <td><input type="checkbox" name="selected_rows_network_storage" id="selected_rows_network_storage" value="{{ result[0] }}"></td>
+    <td>{{ result[1] }}</td>
+    <td><a href="{{ result[2] }}">{{ result[2] }}</a></td>
+    <td>{{ result[3] }}</td>
+    <td>{{ result[4] }}</td>
+    <td>{{ result[5] }}</td>
+    <td>{{ result[6] }}</td>
+    {% if not loop.last %} {% endif %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+<input style="margin-top: 20px;" type="submit" value="Выбрать">
 {% endif %}
+<!-- Вывод таблицы для сравнения коммутаторов -->
+{% if compare_com %}
+{% if compare_com!= ' ' %}
+ <h2>Сравнение коммутаторов</h2>
+ <table>
+   <thead>
+     <tr>
+       <th>Название</th>
+       <th>Ссылка</th>
+       <th>Цена</th>
+       <th>Порты WAN/LAN</th>
+       <th>Уровень</th>
+       <th>Пропускная способность(Скорость)</th>
+       <th>Вид</th>
+       <th>Размещение</th>
+     </tr>
+   </thead>
+   <tbody>
+     {% for result in compare_com %}
+     <tr>
+       <td>{{ result[0] }}</td>
+       <td><a href="{{ result[1] }}">{{ result[1] }}</a></td>
+       <td>{{ result[2] }}</td>
+       <td>{{ result[3] }}</td>
+       <td>{{ result[4] }}</td>
+       <td>{{ result[5] }}</td>
+       <td>{{ result[6] }}</td>
+       <td>{{ result[7] }}</td>
+       {% if not loop.last %} {% endif %}
+     </tr>
+     {% endfor %}
+   </tbody> </table>
+   {% endif %} {% endif %} 
 
+   {% if compare_marsh %}
+   {% if compare_marsh!=' ' %}
+   <h2>Сравнение маршрутизаторов</h2>
+   <table>
+     <thead>
+       <tr>
+         <th>Название</th>
+         <th>Ссылка</th>
+         <th>Цена</th>
+         <th>Порты WAN/LAN</th>
+         <th>Поддержка IPv6</th>
+       </tr>
+     </thead>
+     <tbody>
+       {% for result in compare_marsh %}
+       <tr>
+         <td>{{ result[0] }}</td>
+         <td><a href="{{ result[1] }}">{{ result[1] }}</a></td>
+         <td>{{ result[2] }}</td>
+         <td>{{ result[3] }}</td>
+         <td>{{ result[4] }}</td>
+         {% if not loop.last %} {% endif %}
+       </tr>
+       {% endfor %}
+     </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+
+  {% if compare_wifi_router %}
+  {% if compare_wifi_router!=' ' %}
+  <h2>Сравнение Wi-Fi роутеров</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Ссылка</th>
+        <th>Цена</th>
+        <th>Порты WAN/LAN</th>
+        <th>Стандарты Wi-Fi</th>
+        <th>Скорость передачи</th>
+        <th>Поддержка IPv6</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in compare_wifi_router %}
+      <tr>
+        <td>{{ result[0] }}</td>
+        <td><a href="{{ result[1] }}">{{ result[1] }}</a></td>
+        <td>{{ result[2] }}</td>
+        <td>{{ result[3] }}</td>
+        <td>{{ result[4] }}</td>
+        <td>{{ result[5] }}</td>
+        <td>{{ result[6] }}</td>
+        {% if not loop.last %} {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+  
+  {% if compare_server %}
+  {% if compare_server!=' ' %}
+  <h2>Сравнение серверов</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Ссылка</th>
+        <th>Цена</th>
+        <th>Порты WAN/LAN</th>
+        <th>Порты USB</th>
+        <th>Количество процессоров</th>
+        <th>Дисковая корзина</th>
+        <th>Процессор</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in compare_server %}
+      <tr>
+        <td>{{ result[0] }}</td>
+        <td><a href="{{ result[1] }}">{{ result[1] }}</a></td>
+        <td>{{ result[2] }}</td>
+        <td>{{ result[3] }}</td>
+        <td>{{ result[4] }}</td>
+        <td>{{ result[5] }}</td>
+        <td>{{ result[6] }}</td>
+        <td>{{ result[7] }}</td>
+        {% if not loop.last %} {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+  
+  {% if compare_access_point %}
+  {% if compare_access_point!=' ' %}
+  <h2>Стравнение точек доступа</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Ссылка</th>
+        <th>Цена</th>
+        <th>Порты WAN/LAN</th>
+        <th>Стандарты Wi-Fi</th>
+        <th>Размещение</th>
+        <th>Варианты крепления</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in compare_access_point %}
+      <tr>
+        <td>{{ result[0] }}</td>
+        <td><a href="{{ result[1] }}">{{ result[1] }}</a></td>
+        <td>{{ result[2] }}</td>
+        <td>{{ result[3] }}</td>
+        <td>{{ result[4] }}</td>
+        <td>{{ result[5] }}</td>
+        <td>{{ result[6] }}</td>
+        {% if not loop.last %} {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+  
+  {% if compare_cabinet %}
+  {% if compare_cabinet!=' ' %}
+  <h2>Сравнение шкафов и стоек</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 140px;">Название</th>
+        <th>Ссылка</th>
+        <th>Цена</th>
+        <th>Число секций</th>
+        <th>Высота</th>
+        <th>Установка</th>
+        <th>Защита</th>
+        <th style="width: 140px;">Тип шкафа</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in compare_cabinet %}
+      <tr>
+        <td style="width: 140px;">{{ result[0] }}</td>
+        <td><a href="{{ result[1] }}">{{ result[1] }}</a></td>
+        <td>{{ result[2] }}</td>
+        <td>{{ result[3] }}</td>
+        <td>{{ result[4] }}</td>
+        <td>{{ result[5] }}</td>
+        <td>{{ result[6] }}</td>
+        <td style="width: 140px;">{{ result[7] }}</td>
+        {% if not loop.last %} {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+  
+  {% if compare_network_storage %}
+  {% if compare_network_storage!=' ' %}
+  <h2>Сравнение сетевых хранилищ</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Ссылка</th>
+        <th>Цена</th>
+        <th>Количество отсеков</th>
+        <th>Максимально поддерживаемый объем</th>
+        <th>Количество портов Ethernet</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in compare_network_storage %}
+      <tr>
+        <td>{{ result[0] }}</td>
+        <td><a href="{{ result[1] }}">{{ result[1] }}</a></td>
+        <td>{{ result[2] }}</td>
+        <td>{{ result[3] }}</td>
+        <td>{{ result[4] }}</td>
+        <td>{{ result[5] }}</td>
+        {% if not loop.last %} {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
 </body>
 </html>

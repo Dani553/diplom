@@ -95,6 +95,7 @@ input[type="password"]:focus {
 }
   </style>
   <body>
+<!-- Создание формы для отбработки маршрута 'register', который отвечает за запись новых пользователей в таблицу users -->
     <div class="form-container">
       <form method="POST" action="{{ url_for('register') }}" class="form">
         <div class="form-group">
@@ -108,10 +109,12 @@ input[type="password"]:focus {
         <div class="form-group">
           <input type="submit" value="Зарегистрироваться" class="btn">
         </div>
+<!-- Вывод ошибки на странице регистрации -->
         {% if error %}
         <div class="error-message">{{ error }}</div>
         {% endif %}
       </form>
+<!-- Создание ссылки для перехода в страницу входа -->
       <div class="bottom-text">
         <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Тогда зайдите в аккаунт</a></p>
       </div>

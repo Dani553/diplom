@@ -1,32 +1,33 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-# Импортируем все библиотеки для работы с web-приложением и его зависимостями
+
 from flask import Flask, render_template, request, redirect, session, url_for
 import importlib.util
 from dotenv import load_dotenv
+import requests
 import os
 from werkzeug.security import check_password_hash, generate_password_hash
 import psycopg2
-# Создаем окно web-приложения
+
 application = Flask(__name__)
-# Загружаем все значения из файла .env
+
 load_dotenv()
-# Передаем значения полученные из файла .env в переменные
+
 db_password = os.getenv("DB_PASSWORD")
-db_sample_password = os.getenv("DB_PASSWORD_SAMPLE")
 secret_key = os.getenv("SECRET_KEY")
 admin_email= os.getenv("ADMIN_EMAIL")
-# В конфигурацию приложения добавляем секретный ключ доступа к нему
+recaptcha_secret = os.getenv("RECAPTCHA_SECRET_KEY")
+
 application.config["SECRET_KEY"] = secret_key
-# Добавляем переменные для БД PostgreSQL
+# application.config["SERVER_NAME"] = 'www.net-equip-aggregator.ru'
+
 db_host = 'localhost'
 db_name = 'postgres'
 db_user = 'postgres'
-db_user_sample = 'sample'
-# Подключаемся к БД и создаем курсор для работы в ней
+
 conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user, password=db_password)
 cur = conn.cursor()
-# Выбираем уникальные значения характеристик для того, чтобы передать их в списки
+
 cur.execute("""SELECT DISTINCT "Уровень" from "Характеристики коммутаторов" Where "Уровень"!=' '""")
 row1 = cur.fetchall()
 cur.execute("""SELECT DISTINCT "Пропускная способность(Скорость)" from "Характеристики коммутаторов" 
@@ -61,26 +62,30 @@ row15 = cur.fetchall()
 
 cur.close()
 conn.close()
-# Создание обработчика маршрута '/', для вывода и работы с главной страницей web-приложения
+
 @application.route('/')
 def home():
     list_found=[0, 0, 0, 0, 0, 0, 0]
-# Проверка авторизован ли пользователь или нет, если нет, то переносим его к обработчику маршрута '/login', если авторизован, 
-# то передаем уникальные значения на главную страницу и флаг для того, чтобы не выводилась таблица сравнения раньше времени
     if 'username' in session:
         return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, 
                            row4=row4, row5=row5, row6=row6, row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, 
                            row12=row12, row13=row13, row14=row14, row15=row15)
     else:
         return redirect(url_for('login'))
-# Обработчик маршрута ' /login', с методами для получения и отправки запросов для страницы входа web-приложения
 @application.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-# Получения данных из форм страницы входа 
+
             username = request.form.get('username')
             password = request.form.get('password')
-
+        #recaptcha_response = request.form.get('g-recaptcha-response')
+        
+        #recaptcha_url = 'https://www.google.com/recaptcha/api/siteverify'
+        #data = {'secret': recaptcha_secret, 'response': recaptcha_response}
+        #response = requests.post(recaptcha_url, data=data)
+        #result = response.json()
+        #print(result)
+        #if result['success']:
             conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user, password=db_password)
             cur = conn.cursor()
             user_query="SELECT * FROM users WHERE username='"+username+"'"
@@ -90,26 +95,26 @@ def login():
 
             cur.close()
             conn.close()
-# Проверка на запись аккаунта пользователя, если не найден выводится ошибка
+
             if user and check_password_hash(user[2], password):
                 session['username'] = username
-# Проверка является пользователь администратором или нет и дальнейший переход на главную страницу, если не администратор, 
-# и страницу панели администратора если является администратором
                 if session['username']==admin_email:
                     return redirect(url_for('admin_dashboard'))
                 else:
                     return redirect(url_for('home'))
             else:
                 return render_template('login.html', error='Введен неверный логин или пароль')
+        # else:
+        #     error = 'Captcha не прошла проверку'
+        #     return render_template('login.html', error=error)
     else:
         return render_template('login.html')
-# Обработчик маршрута '/logout' с методом запроса отправки
+    
 @application.route('/logout', methods=['POST'])
 def logout():
-# Обнуление username в сессии и возврат к обработчику '/login'
     session.pop('username', None)
     return redirect(url_for('login'))
-# Обработчик маршрута 'register' с методами запроса получения и отправки для страницы регстрации
+
 @application.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -122,7 +127,7 @@ def register():
         users_query="SELECT * FROM users WHERE username='"+username+"'"
         cur.execute(users_query)
         user = cur.fetchone()
-# Проверка введенных данных, если уже существует указанный username, то выводится ошибка, если не введены данные в поля, то также вывод ошибки
+
         if user:
             return render_template('register.html', error='Пользователь уже создан')
         elif (not username):
@@ -130,9 +135,8 @@ def register():
         elif (not password):
             return render_template('register.html', error='Не введен пароль')
         else:
-# Хеширование пароля с помощью шифра sha256
             hashed_password = generate_password_hash(password)
-# Создание нового пользователя
+
             users_login_query="INSERT INTO users (username, password) VALUES ('"+username+"', '"+hashed_password+"')"
             cur.execute(users_login_query)
             conn.commit()
@@ -143,19 +147,16 @@ def register():
             return redirect(url_for('home'))
     else:
         return render_template('register.html')
-# Обработчик маршрута '/admin_dashboard' для страницы панели администратора с методами запросов получения и отправки
+
 @application.route('/admin_dashboard', methods=['GET', 'POST'])
 def admin_dashboard():
     conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user, password=db_password)
     cur = conn.cursor()
-# Проверка нахождения username в сессии и введенные данные являются данными администратора
     if 'username' in session and session['username']==admin_email:
         if request.method == 'POST':
-# Проверка на то какая форма обратилась к обработчику из клиентской части, в данном случае, если быбрана форма для вывода таблиц
             if request.form['submit']=='Вывод таблицы':
-# Получение имен таблиц хранящих информацию по каждому типу сетевого оборудования
                 table_name = request.form['table_name']
-                table_name1=' '
+
                 if (table_name=="Коммутаторы"):
                         table_name1="Характеристики коммутаторов"
                 elif (table_name=="Маршрутизаторы"):
@@ -170,20 +171,17 @@ def admin_dashboard():
                         table_name1="Характеристики шкафов"
                 elif (table_name=="Сетевые хранилища"):
                         table_name1="Характеристики сетевых хранилищ"
-                else:
-                    return render_template('admin_dashboard.html', error="Не выбрана таблица")
-# Вывод информации о сетевых оборудованиях выбранной таблицы их типа
-                table_query="""SELECT * FROM "{}", "{}" WHERE "{}"."ID_характеристики"="{}"."ID_характеристики";""".format(
-                    table_name, table_name1, table_name, table_name1)
+
+                table_query="""SELECT * FROM "{}", "{}" WHERE "{}"."ID_характеристики"="{}"."ID_характеристики";""".format(table_name, table_name1, table_name, table_name1)
                 cur.execute(table_query)
                 rows = cur.fetchall()
                 columns = [desc[0] for desc in cur.description]
 
                 cur.close()
                 conn.close()
-# Перевод полученных данных на страницу панели администратора с полученной таблицей, строками этой таблицы и столбцами
+
                 return render_template('admin_dashboard.html', table=table_name, rows=rows, columns=columns)
-# Проверка введенных в поля данных на их правильность, в случае если они неверные, то выводится ошибка
+            
             if len(request.form['field0'])<6:
                 field0 = request.form['field0']
             else:
@@ -196,44 +194,37 @@ def admin_dashboard():
                 field1 = request.form['field1']
             else:
                 return render_template('admin_dashboard.html', error="Значение поля 'Название' слишком велико!")
-            if len(request.form['field3'])<50:
-                field3 = request.form['field3']
-            else:
-                return render_template('admin_dashboard.html', error="Значение поля 'Цена' слишком велико!")
-            if len(request.form['field2'])<200:
+            if len(request.form['field2'])<50:
                 field2 = request.form['field2']
             else:
+                return render_template('admin_dashboard.html', error="Значение поля 'Цена' слишком велико!")
+            if len(request.form['field3'])<200:
+                field3 = request.form['field3']
+            else:
                 return render_template('admin_dashboard.html', error="Значение поля 'Ссылки' слишком велико!")
-# Дальше проверка не производится так как данные могут иметь разные типы и длину
             field4 = request.form['field4']
             field5 = request.form['field5']
             field6 = request.form['field6']
             field7 = request.form['field7']
             field8 = request.form['field8']
-# Проверка на то какая форма обратилась к обработчику из клиентской части, в данном случае, если быбрана форма для вставки данных в таблицы
+            table_name1 = request.form.getlist('table_name1')
+            
             if request.form['submit']=='Вставка данных':
-# Попытка вставки данных через try, для того, чтобы если данные в непроверяемые поля были неверные, выводилась ошибка
                 try:
-# Получение имени таблицы и последующая проверка этих таблиц для составления SQL-запроса для вставки данных 
-# для каждого типа сетевого оборудования
-                    table_name = request.form['table_name']
-                    if table_name=='Коммутаторы':
-# Проверка на пустоту введенных данных в обязательные поля, для защиты от пустых записей
+                    if table_name1==['com']:
                         if field4!='' and field1!='' and field3!='':
-# SQL-запросы на вставку введенных данных в таблицы "Характеристики коммутаторов" и "Коммутаторы"
                                 cur.execute("""INSERT INTO "Характеристики коммутаторов" ("Порты WAN/LAN", "Уровень", "Пропускная способность(Скорость)", 
                                 "Вид", "Размещение") values ('{}', '{}', '{}', '{}', '{}')""".format(field4, field5, field6, field7, field8))
                                 conn.commit()
                                 cur.execute("""SELECT "ID_характеристики" FROM "Характеристики коммутаторов" ORDER BY "ID_характеристики" DESC LIMIT 1;""")
                                 index=cur.fetchone()
                                 cur.execute("""INSERT INTO "Коммутаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") values 
-                                ('{}', '{}', '{}', '{}')""".format(field1, field2, field3, index[0]))
+                                ('{}', '{}', '{}', '{}')""".format(field1, field3, field2, index[0]))
                                 conn.commit()
                         else:
-                                return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', \
-                                                       'Ссылка' и 'Первая характеристика'")
+                                return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', 'Ссылка' и 'Первая характеристика'")
     
-                    elif table_name=='Маршрутизаторы':
+                    elif table_name1==['marsh']:
                         if field4!='' and field1!='' and field3!='':
                             cur.execute("""INSERT INTO "Характеристики маршрутизаторов" ("Порты WAN/LAN", "Поддержка IPv6") 
                             values ('{}', '{}')""".format(field4, field5))
@@ -241,36 +232,36 @@ def admin_dashboard():
                             cur.execute("""SELECT "ID_характеристики" FROM "Характеристики маршрутизаторов" ORDER BY "ID_характеристики" DESC LIMIT 1;""")
                             index=cur.fetchone()
                             cur.execute("""INSERT INTO "Маршрутизаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") 
-                            values ('{}', '{}', '{}', '{}')""".format(field1, field2, field3, index[0]))
+                            values ('{}', '{}', '{}', '{}')""".format(field1, field3, field2, index[0]))
                             conn.commit()
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', 'Ссылка' и 'Первая характеристика'")
-                    elif table_name=='Wi-Fi роутеры':
+                    elif table_name1==['router']:
                         if field5!='' and field1!='' and field3!='':
                             cur.execute("""INSERT INTO "Характеристики Wi-Fi роутеров" ("Порты WAN/LAN", "Стандарты Wi-Fi", "Скорость передачи", 
-                            "Поддержка IPv6") values ('{}', '{}', '{}', '{}')""".format(field4, field5, field6, field7))
+                            "Поддержка IPv6") values ('{}', '{}', '{}', '{}')""").format(field4, field5, field6, field7)
                             conn.commit()
                             cur.execute("""SELECT "ID_характеристики" FROM "Характеристики Wi-Fi роутеров" ORDER BY "ID_характеристики" DESC LIMIT 1;""")
                             index=cur.fetchone()
                             cur.execute("""INSERT INTO "Wi-Fi роутеры" ("Название", "Ссылки", "Цена", "ID_характеристики") 
-                            values ('{}', '{}', '{}', '{}')""".format(field1, field2, field3, index[0]))
+                            values ('{}', '{}', '{}', '{}')""".format(field1, field3, field2, index[0]))
                             conn.commit()
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', 'Ссылка' и 'Вторая характеристика'")
-                    elif table_name=='Серверные платформы':
+                    elif table_name1==['server']:
                         if field8!='' and field1!='' and field3!='':
                             cur.execute("""INSERT INTO "Характеристики серверных платформ" ("Порты WAN/LAN", "Порты USB", "Процессор", 
-                            "Количество процессоров", "Дисковая корзина") values ('{}',
+                            "Количество процессоров", "Дисковая корзина") values ('{}', /
                             '{}', '{}', '{}', '{}')""".format(field4, field5, field6, field7, field8))
                             conn.commit()
                             cur.execute("""SELECT "ID_характеристики" FROM "Характеристики серверных платформ" ORDER BY "ID_характеристики" DESC LIMIT 1""")
                             index=cur.fetchone()
                             cur.execute("""INSERT INTO "Серверные платформы" ("Название", "Ссылки", "Цена", "ID_характеристики") 
-                            values ('{}', '{}', '{}', '{}')""".format(field1, field2, field3, index[0]))
+                            values ('{}', '{}', '{}', '{}')""".format(field1, field3, field2, index[0]))
                             conn.commit()
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', 'Ссылка' и 'Пятую характеристика'")
-                    elif table_name=='Шкафы и стойки':
+                    elif table_name1==['shkaf']:
                         if field5!='' and field1!='' and field3!='':
                             cur.execute("""INSERT INTO "Характеристики шкафов" ("Установка", "Число секций", "Защита", "Высота", "Тип шкафа") 
                             values ('{}', '{}', '{}', '{}', '{}')""".format(field4, field5, field6, field7, field8))
@@ -278,11 +269,11 @@ def admin_dashboard():
                             cur.execute("""SELECT "ID_характеристики" FROM "Характеристики шкафов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
                             index=cur.fetchone()
                             cur.execute("""INSERT INTO "Шкафы и стойки" ("Название", "Ссылки", "Цена", "ID_характеристики") 
-                            values ('{}', '{}', '{}', '{}')""".format(field1, field2, field3, index[0]))
+                            values ('{}', '{}', '{}', '{}')""".format(field1, field3, field2, index[0]))
                             conn.commit()
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', 'Ссылка' и 'Вторую характеристика'")
-                    elif table_name=='Точки доступа Wi-Fi':
+                    elif table_name1==['toch']:
                         if field5!='' and field1!='' and field3!='':
                             cur.execute("""INSERT INTO "Характеристики точек доступа Wi-Fi" ("Порты WAN/LAN", "Стандарты Wi-Fi", "Размещение", 
                             "Варианты крепления") values ('{}', '{}', '{}', '{}')""".format(field4, field5, field6, field7))
@@ -290,11 +281,11 @@ def admin_dashboard():
                             cur.execute("""SELECT "ID_характеристики" FROM "Характеристики точек доступа Wi-Fi" ORDER BY "ID_характеристики" DESC LIMIT 1""")
                             index=cur.fetchone()
                             cur.execute("""INSERT INTO "Точки доступа Wi-Fi" ("Название", "Ссылки", "Цена", "ID_характеристики") 
-                            values ('{}', '{}', '{}', '{}')""".format(field1, field2, field3, index[0]))
+                            values ('{}', '{}', '{}', '{}')""".format(field1, field3, field2, index[0]))
                             conn.commit()
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', 'Ссылка' и 'Вторую характеристика'")
-                    elif table_name=='Сетевые хранилища':
+                    elif table_name1==['chran']:
                         if field5!='' and field1!='' and field3!='':
                             cur.execute("""INSERT INTO "Характеристики сетевых хранилищ" ("Количество отсеков", "Максимально поддерживаемый объем", 
                             "Количество портов Ethernet") values ('{}', '{}', '{}')""".format(field4, field5, field6))
@@ -302,24 +293,20 @@ def admin_dashboard():
                             cur.execute("""SELECT "ID_характеристики" FROM "Характеристики сетевых хранилищ" ORDER BY "ID_характеристики" DESC LIMIT 1""")
                             index=cur.fetchone()
                             cur.execute("""INSERT INTO "Сетевые хранилища" ("Название", "Ссылки", "Цена", "ID_характеристики") 
-                            values ('{}', '{}', '{}', '{}')""".format(field1, field2, field3, index[0]))
+                            values ('{}', '{}', '{}', '{}')""".format(field1, field3, field2, index[0]))
                             conn.commit()
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'Название', 'Ссылка' и 'Вторую характеристика'")    
                     else:
                         redirect(url_for('login'))
-# Обработчик для ошибок, для того, чтобы не вылетала ошибка приложения и не останавливался сервер
                 except (Exception):
                         return render_template('admin_dashboard.html', error="Введены неверные данные в поля!")
-# Проверка на то какая форма обратилась к обработчику из клиентской части, в данном случае, если быбрана форма для изменения данных из таблицы    
+    
             elif request.form['submit']=='Изменение данных':
                 query=[]
                 try:
-                    table_name = request.form['table_name']
-                    if table_name=='Коммутаторы':
+                    if table_name1==['com']:
                         if field01!='':
-# SQL-запрос на изменения данных в таблицах "Характеристики коммутаторов" и "Коммутаторы", при этом проверяется, если поля не пусты, 
-# то соответствующая хараткеритсика добавляется в запрос
                             update_query="""UPDATE "Характеристики коммутаторов" SET """
                             if field4!='':
                                 query.append(""""Порты WAN/LAN"='{}'""".format(field4))
@@ -337,22 +324,22 @@ def admin_dashboard():
                             cur.execute(update_query) 
                             conn.commit()
                             query=[]
-                        if field0!='':
+                        elif field0!='':
                             update_query="""UPDATE "Коммутаторы" SET """
                             if field1!='':
                                 query.append(""""Название"='{}'""".format(field1))
-                            if field3!='':
-                                query.append(""""Цена"='{}'""".format(field3))
                             if field2!='':
-                                query.append(""""Ссылки"='{}'""".format(field2))
+                                query.append(""""Цена"='{}'""".format(field2))
+                            if field3!='':
+                                query.append(""""Ссылки"='{}'""".format(field3))
                             if query!='':
                                 update_query+= ', '.join(query)
                             update_query+=""" WHERE "ID"='{}'""".format(field0)
                             cur.execute(update_query)
                             conn.commit()
-                        if field01=='' and field0=='':
+                        else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'ID' и 'ID_характеристики'")     
-                    elif table_name=='Маршрутизаторы':
+                    elif table_name1==['marsh']:
                         if field01!='':
                             update_query="""UPDATE "Характеристики маршрутизаторов" SET """
                             if field4!='':
@@ -364,23 +351,23 @@ def admin_dashboard():
                             update_query+=""" WHERE "ID_характеристики"='{}'""".format(field01)
                             cur.execute(update_query) 
                             conn.commit()
-                        if field0!='':
+                        elif field0!='':
                             query=[]
                             update_query="""UPDATE "Маршрутизаторы" SET """
                             if field1!='':
                                 query.append(""""Название"='{}'""".format(field1))
-                            if field3!='':
-                                query.append(""""Цена"='{}'""".format(field3))
                             if field2!='':
-                                query.append(""""Ссылки"='{}'""".format(field2))
+                                query.append(""""Цена"='{}'""".format(field2))
+                            if field3!='':
+                                query.append(""""Ссылки"='{}'""".format(field3))
                             if query!='':
                                 update_query+= ', '.join(query)
                             update_query+=""" WHERE "ID"='{}'""".format(field0)
                             cur.execute(update_query)
                             conn.commit()
-                        if field01=='' and field0=='':
+                        else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'ID' и 'ID_характеристики'")
-                    elif table_name=='Wi-Fi роутеры':
+                    elif table_name1==['router']:
                         if field01!='':
                             update_query="""UPDATE "Характеристики Wi-Fi роутеров" SET """
                             if field4!='':
@@ -396,23 +383,23 @@ def admin_dashboard():
                             update_query+=""" WHERE "ID_характеристики"='{}'""".format(field01)
                             cur.execute(update_query) 
                             conn.commit()
-                        if field0!='':
+                        elif field0!='':
                             query=[]
                             update_query="""UPDATE "Wi-Fi роутеры" SET """
                             if field1!='':
                                 query.append(""""Название"='{}'""".format(field1))
-                            if field3!='':
-                                query.append(""""Цена"='{}'""".format(field3))
                             if field2!='':
-                                query.append(""""Ссылки"='{}'""".format(field2))
+                                query.append(""""Цена"='{}'""".format(field2))
+                            if field3!='':
+                                query.append(""""Ссылки"='{}'""".format(field3))
                             if query!='':
                                 update_query+= ', '.join(query)
                             update_query+=""" WHERE "ID"='{}'""".format(field0)
                             cur.execute(update_query)
                             conn.commit()
-                        if field01=='' and field0=='':
+                        else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'ID' и 'ID_характеристики'")
-                    elif table_name=='Серверные платформы':
+                    elif table_name1==['server']:
                         if field01!='':
                             update_query="""UPDATE "Характеристики серверных платформ" SET """
                             if field4!='':
@@ -430,23 +417,23 @@ def admin_dashboard():
                             update_query+=""" WHERE "ID_характеристики"='{}'""".format(field01)
                             cur.execute(update_query) 
                             conn.commit()
-                        if field0!='':
+                        elif field0!='':
                             query=[]
                             update_query="""UPDATE "Серверные платформы" SET """
                             if field1!='':
                                 query.append(""""Название"='{}'""".format(field1))
-                            if field3!='':
-                                query.append(""""Цена"='{}'""".format(field3))
                             if field2!='':
-                                query.append(""""Ссылки"='{}'""".format(field2))
+                                query.append(""""Цена"='{}'""".format(field2))
+                            if field3!='':
+                                query.append(""""Ссылки"='{}'""".format(field3))
                             if query!='':
                                 update_query+= ', '.join(query)
                             update_query+=""" WHERE "ID"='{}'""".format(field0)
                             cur.execute(update_query)
                             conn.commit()
-                        if field01=='' and field0=='':
+                        else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'ID' и 'ID_характеристики'")
-                    elif table_name=='Шкафы и стойки':
+                    elif table_name1==['shkaf']:
                         if field01!='':
                             update_query="""UPDATE "Характеристики шкафов" SET """
                             if field4!='':
@@ -464,23 +451,23 @@ def admin_dashboard():
                             update_query+=""" WHERE "ID_характеристики"='{}'""".format(field01)
                             cur.execute(update_query) 
                             conn.commit()
-                        if field0!='':
+                        elif field0!='':
                             query=[]
                             update_query="""UPDATE "Шкафы и стойки" SET """
                             if field1!='':
                                 query.append(""""Название"='{}'""".format(field1))
-                            if field3!='':
-                                query.append(""""Цена"='{}'""".format(field3))
                             if field2!='':
-                                query.append(""""Ссылки"='{}'""".format(field2))
+                                query.append(""""Цена"='{}'""".format(field2))
+                            if field3!='':
+                                query.append(""""Ссылки"='{}'""".format(field3))
                             if query!='':
                                 update_query+= ', '.join(query)
                             update_query+=""" WHERE "ID"='{}'""".format(field4)
                             cur.execute(update_query)
                             conn.commit()
-                        if field01=='' and field0=='':
+                        else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'ID' и 'ID_характеристики'")
-                    elif table_name=='Точки доступа Wi-Fi':
+                    elif table_name1==['toch']:
                         if field01!='':
                             update_query="""UPDATE "Характеристики точек доступа Wi-Fi" SET """
                             if field4!='':
@@ -496,23 +483,23 @@ def admin_dashboard():
                             update_query+=""" WHERE "ID_характеристики"='{}'""".format(field01)
                             cur.execute(update_query) 
                             conn.commit()
-                        if field0!='':
+                        elif field0!='':
                             query=[]
                             update_query="""UPDATE "Точки доступа Wi-Fi" SET """
                             if field1!='':
                                 query.append(""""Название"='{}'""".format(field1))
-                            if field3!='':
-                                query.append(""""Цена"='{}'""".format(field3))
                             if field2!='':
-                                query.append(""""Ссылки"='{}'""".format(field2))
+                                query.append(""""Цена"='{}'""".format(field2))
+                            if field3!='':
+                                query.append(""""Ссылки"='{}'""".format(field3))
                             if query!='':
                                 update_query+= ', '.join(query)
                             update_query+=""" WHERE "ID"='{}'""".format(field0)
                             cur.execute(update_query)
                             conn.commit()
-                        if field01=='' and field0=='':
+                        else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'ID' и 'ID_характеристики'")
-                    elif table_name=='Сетевые хранилища':
+                    elif table_name1==['chran']:
                         if field01!='':
                             update_query="""UPDATE "Характеристики сетевых хранилищ" SET """
                             if field4!='':
@@ -526,32 +513,31 @@ def admin_dashboard():
                             update_query+=""" WHERE "ID_характеристики"='{}'""".format(field01)
                             cur.execute(update_query) 
                             conn.commit()
-                        if field0!='':
+                        elif field0!='':
                             query=[]
                             update_query="""UPDATE "Сетевые хранилища" SET """
                             if field1!='':
                                 query.append(""""Название"='{}'""".format(field1))
-                            if field3!='':
-                                query.append(""""Цена"='{}'""".format(field3))
                             if field2!='':
-                                query.append(""""Ссылки"='{}'""".format(field2))
+                                query.append(""""Цена"='{}'""".format(field2))
+                            if field3!='':
+                                query.append(""""Ссылки"='{}'""".format(field3))
                             if query!='':
                                 update_query+= ', '.join(query)
                             update_query+=""" WHERE "ID"='{}'""".format(field0)
                             cur.execute(update_query)
                             conn.commit()
-                        if field01=='' and field0=='':
+                        else:
                             return render_template('admin_dashboard.html', error="Введите значения в поля: 'ID' и 'ID_характеристики'")
                     conn.commit()
                 except (Exception):
                         return render_template('admin_dashboard.html', error="Введены неверные данные в поля!")
-# SQL-запрос на удаление данных в таблицах "Характеристики коммутаторов" и "Коммутаторы", при этом проверяется, если поле "ID" не пусто, 
-# то выполняется запрос на удаление
+
             elif request.form['submit']=='Удаление данных':
-                table_name = request.form['table_name']
                 field0 = request.form['field0']
+                table_name1 = request.form.getlist('table_name1')
                 try:
-                    if table_name=='Коммутаторы':
+                    if table_name1==['com']:
                         if field0!='':
                             delete_query1="""DELETE FROM "Характеристики коммутаторов" USING "Коммутаторы" 
                             WHERE "Коммутаторы"."ID_характеристики"="Характеристики коммутаторов"."ID_характеристики" 
@@ -563,7 +549,7 @@ def admin_dashboard():
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поле: 'ID'")
      
-                    elif table_name=='Маршрутизаторы':
+                    elif table_name1==['marsh']:
                         if field0!='':
                             delete_query1="""DELETE FROM "Характеристики маршрутизаторов" USING "Маршрутизаторы" 
                             WHERE "Маршрутизаторы"."ID_характеристики"="Характеристики маршрутизаторов"."ID_характеристики" 
@@ -575,7 +561,7 @@ def admin_dashboard():
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поле: 'ID'")
     
-                    elif table_name=='Wi-Fi роутеры':
+                    elif table_name1==['router']:
                         if field0!='':
                             delete_query1="""DELETE FROM "Характеристики Wi-Fi роутеров" USING "Wi-Fi роутеры" 
                             WHERE "Wi-Fi роутеры"."ID_характеристики"="Характеристики Wi-Fi роутеров"."ID_характеристики" 
@@ -587,7 +573,7 @@ def admin_dashboard():
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поле: 'ID'")
     
-                    elif table_name=='Серверные платформы':
+                    elif table_name1==['server']:
                         if field0!='':
                             delete_query1="""DELETE FROM "Характеристики серверных платформ" USING "Серверные платформы" 
                             WHERE "Серверные платформы"."ID_характеристики"="Характеристики серверных платформ"."ID_характеристики" 
@@ -599,7 +585,7 @@ def admin_dashboard():
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поле: 'ID'")
                     
-                    elif table_name=='Шкафы и стойки':
+                    elif table_name1==['shkaf']:
                         if field0!='':
                             delete_query1="""DELETE FROM "Характеристики шкафов" USING "Шкафы и стойки" 
                             WHERE "Шкафы и стойки"."ID_характеристики"="Характеристики шкафов"."ID_характеристики" 
@@ -611,7 +597,7 @@ def admin_dashboard():
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поле: 'ID'")
     
-                    elif table_name=='Точки доступа Wi-Fi':
+                    elif table_name1==['toch']:
                         if field0!='':
                             delete_query1="""DELETE FROM "Характеристики точек доступа Wi-Fi" USING "Точки доступа Wi-Fi" 
                             WHERE  "Точки доступа Wi-Fi"."ID_характеристики"="Характеристики точек доступа Wi-Fi"."ID_характеристики" 
@@ -623,7 +609,7 @@ def admin_dashboard():
                         else:
                             return render_template('admin_dashboard.html', error="Введите значения в поле: 'ID'")
     
-                    elif table_name=='Сетевые хранилища':
+                    elif table_name1==['chran']:
                         if field0!='':
                             delete_query1="""DELETE FROM "Характеристики сетевых хранилищ" USING "Сетевые хранилища" 
                             WHERE "Сетевые хранилища"."ID_характеристики"="Характеристики сетевых хранилищ"."ID_характеристики" 
@@ -640,68 +626,68 @@ def admin_dashboard():
                     conn.commit()
                 except (Exception):
                     return render_template('admin_dashboard.html', error="Введены неверные данные в поля!")
+
             return redirect(url_for('admin_dashboard'))
-# Если выбран метод запроса получения, то выводится страница панели администратора   
+            
         else:
             return render_template('admin_dashboard.html')
     else:
         return redirect(url_for('login'))
-# Создание обработчика '/admin_dashboard/sniffer_lanmart' с методом запроса на отправку, 
-# которая необходима для выполнения модуля парсера для сайта 'Lanmart'
+    
+@application.route('/admin_dashboard/sniffer_dns', methods=['POST'])
+def run_sniffer_dns():
+    spec=importlib.util.spec_from_file_location('sniffer_dns', "./sniffer_dns.py")
+    sniffer_dns=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sniffer_dns)
+    return redirect(url_for('admin_dashboard'))
+
+@application.route('/admin_dashboard/sniffer_citilink', methods=['POST'])
+def run_sniffer_citilink():
+    spec=importlib.util.spec_from_file_location('sniffer_citilink', "./sniffer_citilink.py")
+    sniffer_citilink=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sniffer_citilink)
+    return redirect(url_for('admin_dashboard'))
+
 @application.route('/admin_dashboard/sniffer_lanmart', methods=['POST'])
 def run_sniffer_lanmart():
-# Поиск пути к файлу 'sniffer_lanmart.py'
     spec=importlib.util.spec_from_file_location('sniffer_lanmart', "./sniffer_lanmart.py")
-# Создание нового модуля
     sniffer_lanmart=importlib.util.module_from_spec(spec)
-# Загрузка созданного модуля
     spec.loader.exec_module(sniffer_lanmart)
     return redirect(url_for('admin_dashboard'))
-# Создание обработчика '/admin_dashboard/sniffer_qtech' с методом запроса на отправку, 
-# которая необходима для выполнения модуля парсера для сайта 'Qtech'
+
 @application.route('/admin_dashboard/sniffer_qtech', methods=['POST'])
 def run_sniffer_qtech():
     spec=importlib.util.spec_from_file_location('sniffer_qtech', "./sniffer_qtech.py")
     sniffer_qtech=importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sniffer_qtech)
     return redirect(url_for('admin_dashboard'))
-# Создание обработчика '/korzina' с методом запроса на отпраку
+
 @application.route('/korzina', methods=['POST'])
 def korzina():
-# Создание списка для проверки нахождения сетевых оборудований
     list_found=[0, 0, 0, 0, 0, 0, 0]
-    conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user_sample, password=db_sample_password)
+    conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user, password=db_password)
     cur = conn.cursor()
-# SQL-запрос для вывода всех данных из таблиц korzina и users, где username равен значению из сессии и 
-# при этом берется последняя подходящая запись из таблицы korzina
     querty_search="SELECT * FROM korzina, users WHERE users.id_client=korzina.id_client AND users.username='"+session.get('username')+"' \
     ORDER BY korzina.id_korzina DESC LIMIT 1"
     cur.execute(querty_search)
     if cur.fetchone():
-# SQL-запрос для подсчета количества столбцов в таблице 'stack_com', которое хранит id подходящих под критерии коммутаторов. 
-# Количество столбцов в этой таблице равно количеству столбцов в таблицах 'stack_marsh', 'stack_router', 'stack_shkaf', 'stack_toch', 
-# 'stack_server', 'stack_chran', поэтому в дальнейшем для каждой таблицы не нужно подсчитывать количество столбцов.
         count_query="SELECT count(*) FROM information_schema.columns WHERE table_name='stack_com'"
         cur.execute(count_query)
         count_result=cur.fetchone()[0]
         stack_com=[]
         inform_com=[]
-# Полученное количество столбцов необходимо для подсчета количества итераций
         for i in range(int(count_result)-1):
-# SQL-запрос для получения id подходящих коммутаторов для пользователя с 'username' взятым из сессии
             id_com_num_query="SELECT id_com{} FROM stack_com, korzina, users WHERE stack_com.id_stack_com=korzina.id_stack_com \
                 AND korzina.id_client=users.id_client AND users.username='{}' \
                 ORDER BY korzina.id_korzina DESC LIMIT 1".format(i+1, session.get('username'))
             cur.execute(id_com_num_query)
             id_com_num=cur.fetchone()
-# Проверка на пустоту полученного результата, если не пустой результат, то он добавляется в массив
             if id_com_num:
                     id_com_num=id_com_num[0]
                     if id_com_num:
                         stack_com.append(id_com_num)
-# Из полученного массива вытаскиваются id для вывода сетевого оборудования с этим id
         for id in stack_com:
-            product_query="""SELECT "ID", "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Уровень", "Пропускная способность(Скорость)", 
+            product_query="""SELECT "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Уровень", "Пропускная способность(Скорость)", 
             "Вид", "Размещение" FROM "Коммутаторы", "Характеристики коммутаторов" 
             WHERE "Характеристики коммутаторов"."ID_характеристики"="Коммутаторы"."ID_характеристики" AND "ID"='{}'""".format(id)
             cur.execute(product_query)
@@ -723,7 +709,7 @@ def korzina():
                 if id_marsh_num:
                     stack_marsh.append(id_marsh_num)
         for id in stack_marsh:
-            product_query="""SELECT "ID", "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Поддержка IPv6" 
+            product_query="""SELECT "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Поддержка IPv6" 
             FROM "Маршрутизаторы", "Характеристики маршрутизаторов" 
             WHERE "Характеристики маршрутизаторов"."ID_характеристики"="Маршрутизаторы"."ID_характеристики" AND "ID"='{}'""".format(id)
             cur.execute(product_query)
@@ -744,7 +730,7 @@ def korzina():
                 if id_router_num:
                     stack_router.append(id_router_num)
         for id in stack_router:
-            product_query="""SELECT "ID", "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Стандарты Wi-Fi", "Скорость передачи", "Поддержка IPv6" 
+            product_query="""SELECT "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Стандарты Wi-Fi", "Скорость передачи", "Поддержка IPv6" 
             FROM "Wi-Fi роутеры", "Характеристики Wi-Fi роутеров" 
             WHERE "Характеристики Wi-Fi роутеров"."ID_характеристики"="Wi-Fi роутеры"."ID_характеристики" AND "ID"='{}'""".format(id)
             cur.execute(product_query)
@@ -765,7 +751,7 @@ def korzina():
                 if id_server_num:
                     stack_server.append(id_server_num)
         for id in stack_server:
-            product_query="""SELECT "ID", "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Порты USB", "Количество процессоров", "Дисковая корзина", 
+            product_query="""SELECT "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Порты USB", "Количество процессоров", "Дисковая корзина", 
             "Процессор" FROM "Серверные платформы", "Характеристики серверных платформ" 
             WHERE "Характеристики серверных платформ"."ID_характеристики"="Серверные платформы"."ID_характеристики" AND "ID"='{}'""".format(id)
             cur.execute(product_query)
@@ -786,7 +772,7 @@ def korzina():
                 if id_shkaf_num:
                     stack_shkaf.append(id_shkaf_num)
         for id in stack_shkaf:
-            product_query="""SELECT "ID", "Название", "Ссылки", "Цена", "Число секций", "Высота", "Установка", "Защита", "Тип шкафа" 
+            product_query="""SELECT "Название", "Ссылки", "Цена", "Число секций", "Высота", "Установка", "Защита", "Тип шкафа" 
             FROM "Шкафы и стойки", "Характеристики шкафов" 
             WHERE "Характеристики шкафов"."ID_характеристики"="Шкафы и стойки"."ID_характеристики" AND "ID"='{}'""".format(id)
             cur.execute(product_query)
@@ -807,7 +793,7 @@ def korzina():
                 if id_toch_num:
                     stack_toch.append(id_toch_num)
         for id in stack_toch:
-            product_query="""SELECT "ID", "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Стандарты Wi-Fi", "Размещение", "Варианты крепления" 
+            product_query="""SELECT "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Стандарты Wi-Fi", "Размещение", "Варианты крепления" 
             FROM "Точки доступа Wi-Fi", "Характеристики точек доступа Wi-Fi" 
             WHERE "Характеристики точек доступа Wi-Fi"."ID_характеристики"="Точки доступа Wi-Fi"."ID_характеристики" AND "ID"='{}'""".format(id)
             cur.execute(product_query)
@@ -828,25 +814,22 @@ def korzina():
                 if id_chran_num:
                     stack_chran.append(id_chran_num)
         for id in stack_chran:
-            product_query="""SELECT "ID", "Название", "Ссылки", "Цена", "Количество отсеков", "Максимально поддерживаемый объем", 
+            product_query="""SELECT "Название", "Ссылки", "Цена", "Количество отсеков", "Максимально поддерживаемый объем", 
             "Количество портов Ethernet" FROM "Сетевые хранилища", "Характеристики сетевых хранилищ" 
             WHERE "Характеристики сетевых хранилищ"."ID_характеристики"="Сетевые хранилища"."ID_характеристики" AND "ID"='{}'""".format(id)
             cur.execute(product_query)
             inform_attr=cur.fetchone()
             if inform_attr:
                 inform_chran.append(inform_attr)
-# После того как была получена вся информация об сетевых оборудованиях, она выводится на главную страницу с уникальными значениями характеристик
-# для передачи их в список параметров характеристик для последующего поиска подходящих и полученные данные о сетевых оборудованиях 
-# из таблицы 'korzina'
+
         return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
                            row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, 
                            row14=row14, row15=row15, inform_com=inform_com, inform_marsh=inform_marsh, inform_router=inform_router,
                            inform_server=inform_server, inform_chran=inform_chran, inform_shkaf=inform_shkaf, inform_toch=inform_toch)
-# Если корзина у пользователя пуста, то выводятся только уникальные характеристики
     else:
         return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
                            row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15)
-# Обработчик маршрута '/compare' с методами запроса получения и отпраки для реализации сравнения сетевых оборудований
+
 @application.route('/compare', methods=['POST', 'GET'])
 def compare():
 
@@ -854,7 +837,7 @@ def compare():
 
     conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user, password=db_password)
     cur = conn.cursor()
-# Вывод характеристик выбранных сетевых оборудований
+
     compare_com=[]
     selected_rows_com = request.form.getlist('selected_rows_com')
     if selected_rows_com:
@@ -955,13 +938,12 @@ def compare():
             
     return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
             row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15)
-# Обработчик маршрута '/submit' с методом запроса отправки для получения введенных данных, поиска подходящих сетевых оборудований
-#  и вывода пользователю
+
 @application.route('/submit', methods=['POST'])
 def submit():
 
     list_found=[0, 0, 0, 0, 0, 0, 0]
-# Проверка checkbox для определения выбранных пользователем сетевых оборудований для вывода подходящих под критерии
+
     checkbox_switch_value = request.form.getlist('switch_flag')
     checkbox_marsh_value = request.form.getlist('marsh_flag')
     checkbox_wifi_router_value = request.form.getlist('wifi_router_flag')
@@ -979,10 +961,11 @@ def submit():
     query_korz=''
     query_att=''
 
-    conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user_sample, password=db_sample_password)
+    conn = psycopg2.connect(host=db_host, dbname=db_name, user=db_user, password=db_password)
     cur = conn.cursor()
-# Если нажат checkbox раздела сетевого оборудования, то по заданным в полям критериям происходит поиск подходящего результата
+
     if checkbox_switch_value:
+
         switch_field1 = request.form['switch_field1']
         if switch_field1:
             if int(switch_field1)>1000000:
@@ -990,29 +973,29 @@ def submit():
                             row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15, 
                             error="Введено слишком большое число в поле 'Порты WAN/LAN' раздела 'Коммутаторы'")
         switch_listbox1 = request.form.getlist('switch_listbox1')
-        print(switch_listbox1)
         switch_listbox2 = request.form.getlist('switch_listbox2')
         switch_listbox3 = request.form.getlist('switch_listbox3')
         switch_listbox4 = request.form.getlist('switch_listbox4')
+
         switch_query = """SELECT "ID", "Название", "Ссылки", "Цена", "Порты WAN/LAN", "Уровень", 
         "Пропускная способность(Скорость)", "Вид", "Размещение" FROM "Коммутаторы", "Характеристики коммутаторов" 
         WHERE "Характеристики коммутаторов"."ID_характеристики"="Коммутаторы"."ID_характеристики" AND """
+
         where_clause = []
         params=[]
-# Проверка на пустоту полей, для того, чтобы определить по каким параметрам искать сетевое оборудование, а какие не будут включены в SQL-запрос
         if switch_field1!='':
             where_clause.append(""""Порты WAN/LAN" >= '"""+switch_field1+"""'""")
         else:
-            return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
+            return render_template('home.html', row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
                            row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15, 
                            error="Введите обязательное поле 'Порты WAN/LAN' в разделе 'Коммутаторы'")
-        if switch_listbox1!=[''] and switch_listbox1:
+        if switch_listbox1!=['']:
             where_clause.append(""""Уровень" = '"""+switch_listbox1[0]+"""'""")
-        if switch_listbox2!=[''] and switch_listbox2:
+        if switch_listbox2!=['']:
             where_clause.append(""""Пропускная способность(Скорость)" = '"""+switch_listbox2[0]+"""'""")
-        if switch_listbox3!=[''] and switch_listbox3:
+        if switch_listbox3!=['']:
             where_clause.append(""""Вид" = '"""+switch_listbox3[0]+"""'""")
-        if switch_listbox4!=[''] and switch_listbox4:
+        if switch_listbox4!=['']:
             where_clause.append(""""Размещение" = '"""+switch_listbox4[0]+"""'""")
         if where_clause:
             switch_query += ' AND '.join(where_clause)
@@ -1020,7 +1003,6 @@ def submit():
         switch_results = cur.fetchall()
         id_com_list=[results[0] for results in switch_results[:7]]
         num_elements=len(id_com_list)
-# Если найдены подходящие сетевые оборудования, то они записываются в таблицу содержащую стек подходящих коммутаторов
         if num_elements!=0:
             stack="INSERT INTO stack_com({}) VALUES ({})".format(
                 ", ".join("id_com{}".format(i+1) for i in range(num_elements)),
@@ -1038,6 +1020,7 @@ def submit():
         id_com_list=0
 
     if checkbox_marsh_value:
+
         router_field1 = request.form['router_field1']
         if router_field1:
             if int(router_field1)>1000000:
@@ -1054,10 +1037,10 @@ def submit():
         if router_field1!='':
             where_clause.append(""""Порты WAN/LAN" >= '"""+router_field1+"""'""")
         else:
-            return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
+            return render_template('home.html', row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
                            row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15, 
                            error="Введите обязательное поле 'Порты WAN/LAN' в разделе 'Маршрутизаторы'")
-        if router_listbox!=[''] and router_listbox:
+        if router_listbox!=['']:
             where_clause.append(""""Поддержка IPv6" = '"""+router_listbox[0]+"""'""")
         if where_clause:
             router_query += ' AND '.join(where_clause)
@@ -1104,12 +1087,12 @@ def submit():
         if wifi_router_listbox1!=['']:
             where_clause.append(""""Стандарты Wi-Fi" = '"""+wifi_router_listbox1[0]+"""'""")
         else:
-            return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
+            return render_template('home.html', row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
                            row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15, 
                            error="Введите обязательное поле 'Стандарты Wi-Fi' в разделе ' Wi-Fi роутеры'")
-        if wifi_router_listbox2!=[''] and wifi_router_listbox2:
+        if wifi_router_listbox2!=['']:
             where_clause.append(""""Скорость передачи" = '"""+wifi_router_listbox2[0]+"""'""")
-        if wifi_router_listbox3!=[''] and wifi_router_listbox3:
+        if wifi_router_listbox3!=['']:
             where_clause.append(""""Поддержка IPv6" = '"""+wifi_router_listbox3[0]+"""'""")
         if where_clause:
             wifi_router_query += ' AND '.join(where_clause)
@@ -1176,7 +1159,7 @@ def submit():
         if server_field4!='':
             where_clause.append(""""Дисковая корзина" >= '"""+server_field4+"""'""")
         else:
-            return render_template('home.html', list_found=list_found, row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
+            return render_template('home.html', row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
                            row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15, 
                            error="Введите обязательное поле 'Дисковая корзина' в разделе 'Серверные платформы'")
         if server_listbox1!=['']:
@@ -1229,10 +1212,10 @@ def submit():
             return render_template('home.html', row1=row1, row2=row2, row3=row3, row4=row4, row5=row5, row6=row6, 
                            row7=row7, row8=row8, row9=row9, row10=row10, row11=row11, row12=row12, row13=row13, row14=row14, row15=row15, 
                            error="Введите обязательное поле 'Стандарты Wi-Fi' в разделе 'Точки доступа Wi-Fi'")
-        if access_point_listbox2!=[''] and access_point_listbox2:
+        if access_point_listbox2!=['']:
             params.extend(str(x) for x in access_point_listbox2)
             where_clause.append(""""Размещение" = '"""+access_point_listbox2[0]+"""'""")
-        if access_point_listbox3!=[''] and access_point_listbox3:
+        if access_point_listbox3!=['']:
             params.extend(str(x) for x in access_point_listbox3)
             where_clause.append(""""Варианты крепления" = '"""+access_point_listbox3[0]+"""'""")
         if where_clause:
@@ -1288,11 +1271,11 @@ def submit():
                            error="Введите обязательное поле 'Число секций' в разделе 'Шкафы и стойки'")
         if cabinet_field2!='':
             where_clause.append(""""Высота" <= '"""+cabinet_field2+"""'""")
-        if cabinet_listbox1!=[''] and cabinet_listbox1:
+        if cabinet_listbox1!=['']:
             where_clause.append(""""Установка" = '"""+cabinet_listbox1[0]+"""'""")
-        if cabinet_listbox2!=[''] and cabinet_listbox2:
+        if cabinet_listbox2!=['']:
             where_clause.append(""""Защита" = '"""+cabinet_listbox2[0]+"""'""")
-        if cabinet_listbox3!=[''] and cabinet_listbox3:
+        if cabinet_listbox3!=['']:
             where_clause.append(""""Тип шкафа" = '"""+cabinet_listbox3[0]+"""'""")
         if where_clause:
             cabinet_query += ' AND '.join(where_clause)
@@ -1375,8 +1358,7 @@ def submit():
         id_network_storage_list=0
 
     list_found=[not_com, not_marsh, not_wifi_router, not_server, not_access_point, not_cabinet, not_network_storage]
-# После получения всех результатов производится запись стеков в таблицу 'korzina' для сохранения последних результатов для пользователя, 
-# который выполнял поиск. Если результаты пустые, то они не записываются
+
     name_query="SELECT id_client FROM users WHERE username='"+session.get('username')+"'"
     cur.execute(name_query)
     username=cur.fetchone()
@@ -1391,7 +1373,9 @@ def submit():
         row.append("id_stack_toch")
         row_att.append(str(stack_toch[0]))
     if id_com_list!=0:
+        print(id_com_list)
         row.append("id_stack_com")
+        print(stack_com)
         row_att.append(str(stack_com[0]))
     if id_server_list!=0:
         row.append("id_stack_server")
@@ -1406,6 +1390,7 @@ def submit():
         query_korz+=', '.join(row)
     if row_att:
         query_att+=', '.join(row_att)
+
     if (id_wifi_router_list!=0 or id_marsh_list!=0 or id_access_point_list!=0 or id_com_list!=0 or id_server_list!=0
         or id_cabinet_list!=0 or id_network_storage_list!=0):
         korzina="INSERT INTO korzina( {}, id_client ) VALUES ({}, {})".format(query_korz, query_att, username[0])
@@ -1414,8 +1399,7 @@ def submit():
         conn.commit()
         cur.close()
         conn.close()
-# Вывод результатов поиска подходящих под критерии сетевых оборудований и уникальных значений характеристик, которые передаются 
-# соответствующему listbox
+
     return render_template('home.html', switch_results=switch_results, router_results=router_results, 
                            wifi_router_results=wifi_router_results, server_results=server_results, 
                            access_point_results=access_point_results, cabinet_results=cabinet_results, 

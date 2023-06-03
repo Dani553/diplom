@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.options import Options
 import time
 import psycopg2
 import os
@@ -11,8 +12,12 @@ from dotenv import load_dotenv
 def database_open(name_prod, stack_info, base_inf):
     load_dotenv()
     db_password = os.getenv("DB_PASSWORD")
-    conn = psycopg2.connect(dbname='postgres', user='postgres', 
-                        password=db_password, host='localhost')
+    db_host = 'localhost'
+    db_name = 'postgres'
+    db_user = 'postgres'
+
+    conn = psycopg2.connect(host=db_host, database=db_name, user=db_user, passwd=db_password)
+    cur = conn.cursor()
     cursor = conn.cursor()
     
     database_input(name_prod, cursor, stack_info, base_inf)
@@ -24,68 +29,58 @@ def database_open(name_prod, stack_info, base_inf):
 def database_input(name_prod, cursor, stack, base_inf):
     match name_prod:
         case('Wi-Fi роутеры'):
-            cursor.execute("""INSERT INTO "Характеристики Wi-Fi роутеров" ("Порты WAN/LAN", "Стандарты Wi-Fi", "Скорость передачи", "Поддержка IPv6") values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""INSERT INTO "Характеристики Wi-Fi роутеров" ("Порты WAN/LAN", "Стандарты Wi-Fi", 
+            "Скорость передачи", "Поддержка IPv6") values (%s, %s, %s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики Wi-Fi роутеров" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO "Wi-Fi роутеры" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Wi-Fi роутеры" ("Название", "Ссылки", 
+            "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Маршрутизаторы'):
-            cursor.execute("""INSERT INTO "Характеристики маршрутизаторов" ("Порты WAN/LAN", "Поддержка IPv6") values (%s, %s)""", stack)
+            cursor.execute("""INSERT INTO "Характеристики маршрутизаторов" ("Порты WAN/LAN", 
+            "Поддержка IPv6") values (%s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики маршрутизаторов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO "Маршрутизаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Маршрутизаторы" ("Название", "Ссылки", "Цена", 
+            "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Точки доступа Wi-Fi'):
-            cursor.execute("""INSERT INTO "Характеристики точек доступа Wi-Fi" ("Порты WAN/LAN", "Стандарты Wi-Fi", "Размещение", "Варианты крепления") values (%s, %s, %s, %s)""", stack)
+            cursor.execute("""INSERT INTO "Характеристики точек доступа Wi-Fi" ("Порты WAN/LAN", 
+            "Стандарты Wi-Fi", "Размещение", "Варианты крепления") values (%s, %s, %s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики точек доступа Wi-Fi" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO "Точки доступа Wi-Fi" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Точки доступа Wi-Fi" ("Название", "Ссылки", "Цена", 
+            "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Коммутаторы'):
-            cursor.execute("""INSERT INTO "Характеристики коммутаторов" ("Порты WAN/LAN", "Уровень", "Пропускная способность(Скорость)", "Вид", "Размещение") values (%s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""INSERT INTO "Характеристики коммутаторов" ("Порты WAN/LAN", "Уровень", 
+            "Пропускная способность(Скорость)", "Вид", "Размещение") values (%s, %s, %s, %s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики коммутаторов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO "Коммутаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Коммутаторы" ("Название", "Ссылки", "Цена", "ID_характеристики") 
+            values (%s, %s, %s, %s)""", base_inf)
         case('Шкафы и стойки'):
-            cursor.execute("""INSERT INTO "Характеристики шкафов" ("Установка", "Число секций", "Защита", "Высота", "Тип шкафа") values (%s, %s, %s, %s, %s)""", stack)
+            cursor.execute("""INSERT INTO "Характеристики шкафов" 
+            ("Установка", "Число секций", "Защита", "Высота", "Тип шкафа") values (%s, %s, %s, %s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики шкафов" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO "Шкафы и стойки" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Шкафы и стойки" ("Название", "Ссылки", 
+            "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
         case('Сетевые хранилища'):
-            cursor.execute("""INSERT INTO "Характеристики сетевых хранилищ" ("Количество отсеков", "Максимально поддерживаемый объем", "Количество портов Ethernet") values (%s, %s, %s)""", stack)
+            cursor.execute("""INSERT INTO "Характеристики сетевых хранилищ" 
+            ("Количество отсеков", "Максимально поддерживаемый объем", "Количество портов Ethernet") values (%s, %s, %s)""", stack)
             cursor.execute("""SELECT "ID_характеристики" FROM "Характеристики сетевых хранилищ" ORDER BY "ID_характеристики" DESC LIMIT 1""")
             id = cursor.fetchall()
             base_inf+=id
-            cursor.execute("""INSERT INTO "Сетевые хранилища" ("Название", "Ссылки", "Цена", "ID_характеристики") values (%s, %s, %s, %s)""", base_inf)
+            cursor.execute("""INSERT INTO "Сетевые хранилища" ("Название", "Ссылки", "Цена", "ID_характеристики") 
+            values (%s, %s, %s, %s)""", base_inf)
 
 
 def sniff_info_dns(name_prod):
     main = []
 
-    # if (name_prod=='Шкафы и стойки'):
-    #     for i in range(7):
-    #         time.sleep(5)
-    #         try:
-    #             driver.find_elements(By.CSS_SELECTOR, 'button.pagination-widget__show-more-btn')[0].click()
-    #         except IndexError:
-    #             pass
-    # elif (name_prod=='Сетевые хранилища'):
-    #     for i in range(6):
-    #         time.sleep(5)
-    #         try:
-    #             driver.find_elements(By.CSS_SELECTOR, 'button.pagination-widget__show-more-btn')[0].click()
-    #         except IndexError:
-    #             pass
-    # else:
-    #     while(driver.find_elements(By.CSS_SELECTOR, 'button.pagination-widget__show-more-btn')):
-    #         time.sleep(5)
-    #         try:
-    #             driver.find_elements(By.CSS_SELECTOR, 'button.pagination-widget__show-more-btn')[0].click()
-    #         except IndexError:
-    #             pass
-    
     products = driver.find_elements(By.CSS_SELECTOR, 'div.catalog-product.ui-button-widget')[:10]
 
     for product in products:
@@ -140,7 +135,8 @@ def sniff_charact_dns(name_prode, connection_type, base_inf):
                     ipv6=connection_type[i+1]
 
         if lan!=" ":
-            stack_info=[lan, stand, speed, ipv6]
+            print(int(lan))
+            stack_info=[int(lan), stand, speed, ipv6]
 
             database_open(name_prode, stack_info, base_inf)
     
@@ -174,7 +170,7 @@ def sniff_charact_dns(name_prode, connection_type, base_inf):
             all_ports+=int(lan_wan)
 
         if all_ports!=0:
-            stack_info=[str(all_ports), ipv6]
+            stack_info=[all_ports, ipv6]
 
             database_open(name_prode, stack_info, base_inf)
 
@@ -195,9 +191,11 @@ def sniff_charact_dns(name_prode, connection_type, base_inf):
                     setup=connection_type[i+1]
 
         if lan!=" ":
-            stack_info=[lan, stand, razm, setup]
+            if lan!='нет':
+                print(lan)
+                stack_info=[int(lan), stand, razm, setup]
 
-            database_open(name_prode, stack_info, base_inf)
+                database_open(name_prode, stack_info, base_inf)
 
     if(name_prode=='Коммутаторы'):
         level, speed, vid, razm, all_ports=' '*5
@@ -218,7 +216,7 @@ def sniff_charact_dns(name_prode, connection_type, base_inf):
                     all_ports=connection_type[i+1]
 
         if all_ports!=" ":
-            stack_info=[all_ports, level, speed, vid, razm]
+            stack_info=[int(all_ports), level, speed, vid, razm]
 
             database_open(name_prode, stack_info, base_inf)
 
@@ -240,7 +238,7 @@ def sniff_charact_dns(name_prode, connection_type, base_inf):
                     type=connection_type[i+1]
 
         if count!=" ":
-            stack_info=[yst, count, defen, height, type]
+            stack_info=[yst, int(count), defen, int(height), type]
 
             database_open(name_prode, stack_info, base_inf)
 
@@ -260,64 +258,47 @@ def sniff_charact_dns(name_prode, connection_type, base_inf):
                     count=count.split(' ')[0]
 
         if max!=" ":
-            stack_info=[count_nakop, max, count]
+            stack_info=[int(count_nakop), int(max), int(count)]
 
             database_open(name_prode, stack_info, base_inf)
 
-driver = webdriver.Chrome()
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--window-size=1920x1080")
+driver = webdriver.Chrome(chrome_options=chrome_options)
+driver.get('https://www.dns-shop.ru')
+wait = WebDriverWait(driver, 10)
+network_equipment_link = driver.find_elements(By.LINK_TEXT, 'Сетевое оборудование')[0:]
+print(network_equipment_link)
+network_equipment_link.click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Wi-Fi роутеры и оборудование для малых сетей'))).click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Wi-Fi роутеры'))).click()
+sniff_info_dns('Wi-Fi роутеры')
+driver.back()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Маршрутизаторы'))).click()
+sniff_info_dns('Маршрутизаторы')
+driver.back()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Wi-Fi оборудование'))).click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Точки доступа Wi-Fi'))).click()
+sniff_info_dns('Точки доступа Wi-Fi')
 
-try:
-    driver.get('https://www.dns-shop.ru/')
+driver.get('https://www.dns-shop.ru/')
+network_equipment_link = wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Сетевое оборудование')))
+network_equipment_link.click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Профессиональное сетевое оборудование'))).click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Коммутаторы'))).click()
+sniff_info_dns('Коммутаторы')
+driver.back()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Коммутационные шкафы и стойки'))).click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Коммутационные и серверные шкафы'))).click()
+sniff_info_dns('Шкафы и стойки')
 
-    wait = WebDriverWait(driver, 100)
-    # network_equipment_link = wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Сетевое оборудование')))
-    # network_equipment_link.click()
-
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Wi-Fi роутеры и оборудование для малых сетей'))).click()
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Wi-Fi роутеры'))).click()
-
-    # sniff_info_dns('Wi-Fi роутеры')
-
-    # driver.back()
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Маршрутизаторы'))).click()
-
-    # sniff_info_dns('Маршрутизаторы')
-
-    # driver.back()
-
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Wi-Fi оборудование'))).click()
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Точки доступа Wi-Fi'))).click()
-
-    # sniff_info_dns('Точки доступа Wi-Fi')
-
-    # driver.get('https://www.dns-shop.ru/')
-
-    # network_equipment_link = wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Сетевое оборудование')))
-    # network_equipment_link.click()
-
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Профессиональное сетевое оборудование'))).click()
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Коммутаторы'))).click()
-
-    # sniff_info_dns('Коммутаторы')
-
-    # driver.back()
-
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Коммутационные шкафы и стойки'))).click()
-    # wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Коммутационные и серверные шкафы'))).click()
-
-    # sniff_info_dns('Шкафы и стойки')
-
-    driver.get('https://www.dns-shop.ru/')
-    network_equipment_link = wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'ПК, ноутбуки, периферия')))
-    network_equipment_link.click()
-
-    wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Периферия и аксессуары'))).click()
-    wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Внешние накопители данных'))).click()
-    wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Сетевые хранилища (NAS)'))).click()
-
-    sniff_info_dns('Сетевые хранилища')
-
-except WebDriverException as e:
-    driver.quit()
+driver.get('https://www.dns-shop.ru/')
+network_equipment_link = wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'ПК, ноутбуки, периферия')))
+network_equipment_link.click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Периферия и аксессуары'))).click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Внешние накопители данных'))).click()
+wait.until(EC.visibility_of_element_located((By.LINK_TEXT, 'Сетевые хранилища (NAS)'))).click()
+sniff_info_dns('Сетевые хранилища')
 
 driver.quit()
